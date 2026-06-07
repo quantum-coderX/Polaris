@@ -30,7 +30,7 @@ export default function DashboardLayout() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <aside className="sidebar">
         <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '2rem', background: 'var(--gradient-hero)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          LearnHub
+          Polaris
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

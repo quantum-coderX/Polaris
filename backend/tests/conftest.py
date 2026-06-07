@@ -25,7 +25,7 @@ from app.core.security import hash_password
 from app.models.user import User, UserRole
 
 # ── Test DB (file-based so all connections share the same data) ───────────────
-TEST_DB_PATH = "./test_learnhub.db"
+TEST_DB_PATH = "./test_Polaris.db"
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
 engine_test = create_async_engine(

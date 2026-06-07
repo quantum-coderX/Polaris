@@ -61,10 +61,10 @@ def _build_certificate_pdf(
     c.setLineWidth(1)
     c.rect(1.8 * cm, 1.8 * cm, width - 3.6 * cm, height - 3.6 * cm, fill=0)
 
-    # Header — LearnHub logo text
+    # Header — Polaris logo text
     c.setFillColor(HexColor("#6c63ff"))
     c.setFont("Helvetica-Bold", 28)
-    c.drawCentredString(width / 2, height - 3.5 * cm, "LearnHub")
+    c.drawCentredString(width / 2, height - 3.5 * cm, "Polaris")
 
     c.setFillColor(HexColor("#a78bfa"))
     c.setFont("Helvetica", 12)

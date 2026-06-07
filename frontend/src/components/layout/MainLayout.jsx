@@ -21,7 +21,7 @@ export default function MainLayout() {
     <>
       <nav className="navbar">
         <div className="container navbar__inner">
-          <NavLink to="/" className="navbar__logo">LearnHub</NavLink>
+          <NavLink to="/" className="navbar__logo">Polaris</NavLink>
 
           <div className="navbar__links">
             <NavLink to="/courses" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
@@ -63,7 +63,7 @@ export default function MainLayout() {
 
       <footer style={{ borderTop: '1px solid var(--color-border)', padding: '2rem 0', marginTop: '4rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
         <div className="container">
-          © 2025 LearnHub. All rights reserved.
+          © 2025 Polaris. All rights reserved.
         </div>
       </footer>
     </>

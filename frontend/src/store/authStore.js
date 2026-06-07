@@ -20,7 +20,7 @@ export const useAuthStore = create(
       isRole: (role) => get().user?.role === role,
     }),
     {
-      name: 'learnhub-auth',
+      name: 'Polaris-auth',
       partialize: (state) => ({ user: state.user }),
       // Don't persist the access token — it's short-lived
     }

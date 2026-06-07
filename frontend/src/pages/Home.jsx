@@ -90,7 +90,7 @@ export default function Home() {
       <section className="section" style={{ background: 'var(--color-surface)' }}>
         <div className="container">
           <div className="section__header">
-            <h2>How LearnHub Works</h2>
+            <h2>How Polaris Works</h2>
             <p>From enrollment to certification in 3 simple steps</p>
           </div>
           <div className="grid-3">

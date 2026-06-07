@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Cloud-Native Online Learning Platform API — LearnHub",
+    description="Cloud-Native Online Learning Platform API — Polaris",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
