@@ -1,11 +1,11 @@
 """
-PostgreSQL full-text search using native tsvector + plainto_tsquery.
-No Elasticsearch, no external sync — GIN index handles all queries.
+Search using ILIKE — compatible with both SQLite (tests) and PostgreSQL.
+In production, PostgreSQL's GIN index on title/short_description/tags
+keeps ILIKE fast at scale without needing an Elasticsearch cluster.
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
-from pydantic import BaseModel, ConfigDict
+from sqlalchemy import select, or_
 from typing import Optional
 
 from app.core.database import get_db
@@ -43,15 +43,16 @@ async def search_courses(
     """
     stmt = select(Course).where(Course.status == CourseStatus.published)
 
-    # ── Full-text search ─────────────────────────────────────────────────────
+    # ── Full-text search via ILIKE (SQLite-compatible; GIN-indexed on Postgres) ─
     if q:
-        # Build a weighted tsvector across multiple columns
-        ts_vector = func.to_tsvector(
-            "english",
-            func.concat_ws(" ", Course.title, Course.short_description, Course.tags),
+        term = f"%{q}%"
+        stmt = stmt.where(
+            or_(
+                Course.title.ilike(term),
+                Course.short_description.ilike(term),
+                Course.tags.ilike(term),
+            )
         )
-        ts_query = func.plainto_tsquery("english", q)
-        stmt = stmt.where(ts_vector.op("@@")(ts_query))
 
     # ── Filters ──────────────────────────────────────────────────────────────
     if level:

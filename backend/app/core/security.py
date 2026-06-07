@@ -1,23 +1,21 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
 import jwt
-from passlib.context import CryptContext
+import bcrypt as _bcrypt
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-# ── Password helpers ─────────────────────────────────────────────────────────
+# ── Password helpers — using bcrypt directly (passlib incompatible with bcrypt>=4)
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return _bcrypt.hashpw(plain.encode(), _bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 # ── JWT helpers ──────────────────────────────────────────────────────────────

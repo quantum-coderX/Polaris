@@ -61,11 +61,11 @@ async def create_course(
         raise HTTPException(status_code=403, detail="Your mentor account is pending approval")
 
     slug = _slugify(body.title)
-    # Ensure slug uniqueness
+    # Ensure slug uniqueness across all courses
     result = await db.execute(select(Course).where(Course.slug.like(f"{slug}%")))
     existing = result.scalars().all()
     if existing:
-        slug = f"{slug}-{len(existing)}"
+        slug = f"{slug}-{len(existing) + 1}"
 
     course = Course(**body.model_dump(), slug=slug, mentor_id=current_user.id)
     db.add(course)

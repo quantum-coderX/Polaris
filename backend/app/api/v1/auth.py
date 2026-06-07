@@ -217,15 +217,17 @@ async def verify_2fa(
     Verify a TOTP code against the stored secret.
     Activates 2FA on the account if valid.
     """
-    if not current_user.totp_secret:
+    # Re-fetch user to get totp_secret written by /2fa/enable in a previous request
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one()
+
+    if not user.totp_secret:
         raise HTTPException(status_code=400, detail="Call /2fa/enable first to generate a secret")
 
-    totp = pyotp.TOTP(current_user.totp_secret)
+    totp = pyotp.TOTP(user.totp_secret)
     if not totp.verify(body.code, valid_window=1):
         raise HTTPException(status_code=400, detail="Invalid TOTP code")
 
-    result = await db.execute(select(User).where(User.id == current_user.id))
-    user = result.scalar_one()
     user.is_2fa_enabled = True
     db.add(user)
     return {"message": "2FA successfully enabled", "is_2fa_enabled": True}
