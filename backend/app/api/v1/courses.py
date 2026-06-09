@@ -164,6 +164,8 @@ async def delete_course(
     db.add(course)
 
 
+from sqlalchemy.orm import selectinload
+
 # ---- Modules ---------------------------------------------------------------
 
 @router.post("/{course_id}/modules", response_model=ModuleOut, status_code=201)
@@ -180,11 +182,20 @@ async def create_module(
     module = Module(course_id=course_id, **body.model_dump())
     db.add(module)
     await db.flush()
-    await db.refresh(module)
-    return module
+    res = await db.execute(
+        select(Module)
+        .where(Module.id == module.id)
+        .options(selectinload(Module.lessons))
+    )
+    return res.scalar_one()
 
 
 @router.get("/{course_id}/modules", response_model=list[ModuleOut])
 async def list_modules(course_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Module).where(Module.course_id == course_id).order_by(Module.order))
+    result = await db.execute(
+        select(Module)
+        .where(Module.course_id == course_id)
+        .options(selectinload(Module.lessons))
+        .order_by(Module.order)
+    )
     return result.scalars().all()

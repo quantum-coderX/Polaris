@@ -101,6 +101,8 @@ class ModuleUpdate(BaseModel):
 
 # ── Module Responses ──────────────────────────────────────────────────────────
 
+from app.schemas.lesson import LessonOut
+
 class ModuleOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -110,6 +112,7 @@ class ModuleOut(BaseModel):
     description: Optional[str]
     order: int
     created_at: datetime
+    lessons: list[LessonOut] = []
 
 
 # ── Search Responses ──────────────────────────────────────────────────────────

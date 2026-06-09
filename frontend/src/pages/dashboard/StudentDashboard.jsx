@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Clock, BookOpen, Star } from 'lucide-react'
-import api from '../services/api'
-import { useAuthStore } from '../store/authStore'
+import api from '../../services/api'
+import { useAuthStore } from '../../store/authStore'
 
 export default function StudentDashboard() {
   const { user } = useAuthStore()
