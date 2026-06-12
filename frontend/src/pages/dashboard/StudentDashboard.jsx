@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Clock, BookOpen, Star } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import api from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 
@@ -18,43 +18,45 @@ export default function StudentDashboard() {
   })
 
   return (
-    <div className="animate-fadein">
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem' }}>Welcome back, <span style={{ background: 'var(--gradient-hero)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.full_name}</span> 👋</h1>
-        <p className="text-muted">Continue where you left off</p>
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-white">
+          Welcome back, <span className="bg-gradient-hero bg-clip-text text-transparent">{user?.full_name}</span> 👋
+        </h1>
+        <p className="text-gray-400">Continue where you left off</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid-4" style={{ marginBottom: '2rem' }}>
+      {/* Stats Grid */}
+      <div className="grid-4 mb-8">
         <div className="stat-card">
-          <div className="stat-card__label">Enrolled</div>
-          <div className="stat-card__value">{enrollments?.length ?? 0}</div>
+          <div className="stat-label">Enrolled</div>
+          <div className="stat-value">{enrollments?.length ?? 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label">Completed</div>
-          <div className="stat-card__value">{enrollments?.filter(e => e.status === 'completed').length ?? 0}</div>
+          <div className="stat-label">Completed</div>
+          <div className="stat-value">{enrollments?.filter(e => e.status === 'completed').length ?? 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label">Certificates</div>
-          <div className="stat-card__value">{enrollments?.filter(e => e.certificate_url).length ?? 0}</div>
+          <div className="stat-label">Certificates</div>
+          <div className="stat-value">{enrollments?.filter(e => e.certificate_url).length ?? 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label">In Progress</div>
-          <div className="stat-card__value">{enrollments?.filter(e => e.status === 'active' && e.progress_percent > 0).length ?? 0}</div>
+          <div className="stat-label">In Progress</div>
+          <div className="stat-value">{enrollments?.filter(e => e.status === 'active' && e.progress_percent > 0).length ?? 0}</div>
         </div>
       </div>
 
       {/* My Courses */}
-      <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>My Courses</h2>
+      <h2 className="text-lg font-heading font-bold mb-4 text-white">My Courses</h2>
       {!enrollments?.length ? (
-        <div className="card text-center" style={{ padding: '3rem' }}>
-          <BookOpen size={48} style={{ margin: '0 auto 1rem', color: 'var(--color-text-muted)' }} />
-          <h3>No courses yet</h3>
-          <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Start learning today!</p>
+        <div className="card text-center p-12">
+          <BookOpen size={48} className="mx-auto mb-4 text-gray-500" />
+          <h3 className="text-lg font-bold mb-2">No courses yet</h3>
+          <p className="text-gray-400 mb-6">Start learning today!</p>
           <Link to="/courses" className="btn btn-primary">Browse Courses</Link>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="flex flex-col gap-4">
           {enrollments.map(enrollment => (
             <EnrollmentCard key={enrollment.id} enrollment={enrollment} />
           ))}
@@ -63,14 +65,14 @@ export default function StudentDashboard() {
 
       {/* Recent Notifications */}
       {notifications?.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Recent Notifications</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="mt-10">
+          <h2 className="text-lg font-heading font-bold mb-4 text-white">Recent Notifications</h2>
+          <div className="flex flex-col gap-2">
             {notifications.map(n => (
-              <div key={n.id} className="card" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={n.id} className="card p-4 flex justify-between items-center gap-4">
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{n.title}</div>
-                  <div className="text-muted text-sm">{n.message}</div>
+                  <div className="font-semibold text-sm text-white">{n.title}</div>
+                  <div className="text-gray-400 text-xs mt-1">{n.message}</div>
                 </div>
                 {!n.is_read && <span className="badge badge-primary">New</span>}
               </div>
@@ -84,18 +86,29 @@ export default function StudentDashboard() {
 
 function EnrollmentCard({ enrollment }) {
   return (
-    <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Course #{enrollment.course_id}</div>
+    <div className="card flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+      <div className="flex-1 w-full">
+        <div className="font-semibold text-white mb-2">Course #{enrollment.course_id}</div>
         <div className="progress-bar">
-          <div className="progress-bar__fill" style={{ width: `${enrollment.progress_percent}%` }} />
+          <div className="progress-fill" style={{ width: `${enrollment.progress_percent}%` }} />
         </div>
-        <div className="text-muted text-xs" style={{ marginTop: '0.25rem' }}>{enrollment.progress_percent}% complete</div>
+        <div className="text-gray-400 text-xs mt-1">{enrollment.progress_percent}% complete</div>
       </div>
-      <Link to={`/learn/${enrollment.course_id}`} className="btn btn-primary btn-sm">Continue</Link>
-      {enrollment.certificate_url && (
-        <a href={enrollment.certificate_url} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">Certificate</a>
-      )}
+      <div className="flex gap-2 w-full md:w-auto">
+        <Link to={`/learn/${enrollment.course_id}`} className="btn btn-primary btn-sm flex-1 md:flex-initial text-center">
+          Continue
+        </Link>
+        {enrollment.certificate_url && (
+          <a 
+            href={enrollment.certificate_url} 
+            target="_blank" 
+            rel="noreferrer" 
+            className="btn btn-secondary btn-sm flex-1 md:flex-initial text-center"
+          >
+            Certificate
+          </a>
+        )}
+      </div>
     </div>
   )
 }
