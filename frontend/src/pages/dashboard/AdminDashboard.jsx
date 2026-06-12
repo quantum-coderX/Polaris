@@ -38,12 +38,12 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div className="animate-fadein">
-      <h1 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Admin Panel</h1>
-      <p className="text-muted" style={{ marginBottom: '2rem' }}>Platform overview and content moderation</p>
+    <div className="animate-fade-in">
+      <h1 className="text-2xl md:text-3xl font-heading text-white mb-1">Admin Panel</h1>
+      <p className="text-gray-400 mb-8">Platform overview and content moderation</p>
 
-      {/* Stats */}
-      <div className="grid-4" style={{ marginBottom: '2rem' }}>
+      {/* Stats Grid */}
+      <div className="grid-4 mb-8">
         {[
           { label: 'Total Users', value: stats?.total_users ?? 0, icon: Users },
           { label: 'Total Courses', value: stats?.total_courses ?? 0, icon: BookOpen },
@@ -51,30 +51,34 @@ export default function AdminDashboard() {
           { label: 'Total Revenue', value: `$${(stats?.total_revenue ?? 0).toFixed(2)}`, icon: DollarSign },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="stat-card">
-            <div className="stat-card__label" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <div className="stat-label flex items-center gap-1.5">
               <Icon size={14} />{label}
             </div>
-            <div className="stat-card__value">{value}</div>
+            <div className="stat-value">{value}</div>
           </div>
         ))}
       </div>
 
       {/* Pending Courses */}
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Pending Course Reviews ({pendingCourses?.length ?? 0})</h2>
-        {pendingCourses?.length === 0 && <p className="text-muted">No courses pending review.</p>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <section className="mb-8">
+        <h2 className="text-lg font-heading font-bold mb-4 text-white">Pending Course Reviews ({pendingCourses?.length ?? 0})</h2>
+        {pendingCourses?.length === 0 && <p className="text-gray-400">No courses pending review.</p>}
+        <div className="flex flex-col gap-3">
           {pendingCourses?.map(course => (
-            <div key={course.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div key={course.id} className="card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5">
               <div>
-                <div style={{ fontWeight: 600 }}>{course.title}</div>
-                <div className="text-muted text-sm">{course.level} · {course.language} · ${course.price}</div>
+                <div className="font-semibold text-white">{course.title}</div>
+                <div className="text-gray-400 text-xs mt-1">{course.level} · {course.language} · ${course.price}</div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn btn-sm" style={{ background: 'rgba(0,212,200,0.15)', color: 'var(--color-secondary)', border: '1px solid rgba(0,212,200,0.3)' }} onClick={() => approveCourse.mutate(course.id)}>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button 
+                  className="btn btn-sm flex-1 sm:flex-initial" 
+                  style={{ background: 'rgba(0,212,200,0.15)', color: 'var(--color-secondary)', border: '1px solid rgba(0,212,200,0.3)' }} 
+                  onClick={() => approveCourse.mutate(course.id)}
+                >
                   <CheckCircle size={16} /> Approve
                 </button>
-                <button className="btn btn-danger btn-sm" onClick={() => rejectCourse.mutate(course.id)}>
+                <button className="btn btn-danger btn-sm flex-1 sm:flex-initial" onClick={() => rejectCourse.mutate(course.id)}>
                   <XCircle size={16} /> Reject
                 </button>
               </div>
@@ -85,16 +89,16 @@ export default function AdminDashboard() {
 
       {/* Pending Mentors */}
       <section>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Pending Mentor Approvals ({pendingMentors?.length ?? 0})</h2>
-        {pendingMentors?.length === 0 && <p className="text-muted">No mentor approvals pending.</p>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <h2 className="text-lg font-heading font-bold mb-4 text-white">Pending Mentor Approvals ({pendingMentors?.length ?? 0})</h2>
+        {pendingMentors?.length === 0 && <p className="text-gray-400">No mentor approvals pending.</p>}
+        <div className="flex flex-col gap-3">
           {pendingMentors?.map(mentor => (
-            <div key={mentor.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div key={mentor.id} className="card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5">
               <div>
-                <div style={{ fontWeight: 600 }}>{mentor.full_name}</div>
-                <div className="text-muted text-sm">{mentor.email} · @{mentor.username}</div>
+                <div className="font-semibold text-white">{mentor.full_name}</div>
+                <div className="text-gray-400 text-xs mt-1">{mentor.email} · @{mentor.username}</div>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={() => approveMentor.mutate(mentor.id)}>
+              <button className="btn btn-primary btn-sm w-full sm:w-auto" onClick={() => approveMentor.mutate(mentor.id)}>
                 <CheckCircle size={16} /> Approve Mentor
               </button>
             </div>

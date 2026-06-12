@@ -4,6 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Custom Theme Variables ────────────────────────────────────────────────── */
+:root {
+  --color-bg: #0d0d1a;
+  --color-surface: #13132a;
+  --color-surface-2: #1a1a35;
+  --color-border: #2a2a4a;
+  --color-primary: #7c5cfc;
+  --color-secondary: #00d4c8;
+  --color-accent: #ff6b6b;
+  --color-gold: #fbbf24;
+  --color-text-muted: #9ca3af;
+  --font-heading: 'Outfit', sans-serif;
+  --gradient-hero: linear-gradient(135deg, #7c5cfc 0%, #00d4c8 100%);
+  --gradient-card: linear-gradient(145deg, #1a1a35 0%, #13132a 100%);
+  --radius-md: 0.75rem;
+}
+
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 @layer base {
   * { box-sizing: border-box; }
@@ -11,6 +28,7 @@
   body {
     @apply bg-bg text-white font-sans antialiased;
     line-height: 1.6;
+    background-color: var(--color-bg);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -28,11 +46,27 @@
 /* ── Component Layer ───────────────────────────────────────────────────────── */
 @layer components {
 
+  /* ── Layouts ──────────────────────────────────────────────────────────── */
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+  }
+
+  /* Responsive Grids */
+  .grid-2 {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+  }
+  .grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  .grid-4 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
   /* ── Buttons ──────────────────────────────────────────────────────────── */
   .btn {
     @apply inline-flex items-center justify-center gap-2
            px-6 py-2.5 rounded-xl font-semibold text-sm
-           border-0 cursor-pointer whitespace-nowrap
+           border border-transparent cursor-pointer whitespace-nowrap
            transition-all duration-200;
   }
 
@@ -47,8 +81,7 @@
   }
 
   .btn-ghost {
-    @apply bg-transparent text-gray-400 border border-transparent;
-    &:hover { @apply bg-surface2 text-white; }
+    @apply bg-transparent text-gray-400 hover:text-white hover:bg-surface2;
   }
 
   .btn-danger {
@@ -65,13 +98,44 @@
   .card {
     @apply bg-gradient-card border border-border rounded-2xl p-6
            transition-all duration-200;
-    &:hover { @apply border-primary shadow-glow; }
+    &:hover { @apply border-primary/50 shadow-glow; }
   }
 
-  .course-card {
-    @apply bg-gradient-card border border-border rounded-2xl overflow-hidden
-           transition-all duration-200 cursor-pointer;
-    &:hover { @apply -translate-y-1 border-primary shadow-glow; }
+  /* Course Card */
+  .card-course {
+    @apply bg-surface border border-border rounded-2xl overflow-hidden
+           transition-all duration-300 cursor-pointer flex flex-col h-full;
+    &:hover {
+      @apply -translate-y-1 border-primary shadow-glow;
+    }
+  }
+
+  .card-course__thumbnail {
+    @apply w-full aspect-video object-cover;
+  }
+
+  .card-course__body {
+    @apply p-5 flex flex-col flex-grow;
+  }
+
+  .card-course__tags {
+    @apply flex gap-2 mb-3;
+  }
+
+  .card-course__tag {
+    @apply text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-primary/10 text-primary;
+  }
+
+  .card-course__title {
+    @apply font-heading font-bold text-base text-white mb-2 line-clamp-2 leading-snug;
+  }
+
+  .card-course__meta {
+    @apply flex items-center gap-4 text-xs text-gray-400 mb-4 mt-auto;
+  }
+
+  .card-course__price {
+    @apply text-lg font-heading font-extrabold text-white;
   }
 
   /* ── Form elements ────────────────────────────────────────────────────── */
@@ -103,7 +167,7 @@
   .progress-bar {
     @apply w-full h-1.5 bg-border rounded-full overflow-hidden;
   }
-  .progress-fill {
+  .progress-fill, .progress-bar__fill {
     @apply h-full bg-gradient-hero rounded-full transition-all duration-500;
   }
 
@@ -111,18 +175,41 @@
   .stat-card {
     @apply bg-gradient-card border border-border rounded-2xl p-5;
   }
-  .stat-label { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider; }
-  .stat-value { @apply text-3xl font-heading font-extrabold mt-1; }
+  .stat-label, .stat-card__label { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider; }
+  .stat-value, .stat-card__value { @apply text-3xl font-heading font-extrabold mt-1 text-white; }
 
   /* ── Navbar ───────────────────────────────────────────────────────────── */
   .navbar {
     @apply sticky top-0 z-50 border-b border-border py-4
-           backdrop-blur-xl;
+           backdrop-blur-xl w-full;
     background: rgba(13, 13, 26, 0.85);
   }
 
+  .navbar__inner {
+    @apply flex items-center justify-between;
+  }
+
+  .navbar__logo {
+    @apply font-heading font-extrabold text-xl tracking-wider bg-gradient-hero bg-clip-text text-transparent;
+  }
+
+  .navbar__links {
+    @apply flex items-center gap-6;
+  }
+
+  .navbar__link {
+    @apply text-sm font-medium text-gray-400 hover:text-white transition-colors py-1;
+    &.active {
+      @apply text-primary border-b-2 border-primary;
+    }
+  }
+
   /* ── Sidebar ──────────────────────────────────────────────────────────── */
-  .sidebar-item {
+  .sidebar {
+    @apply w-64 border-r border-border p-6 flex flex-col gap-6 bg-surface shrink-0 transition-transform duration-300;
+  }
+
+  .sidebar-item, .sidebar__item {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-xl
            text-sm font-medium text-gray-400 cursor-pointer w-full
            border-0 bg-transparent text-left
@@ -149,9 +236,46 @@
   .gradient-text {
     @apply bg-gradient-hero bg-clip-text text-transparent;
   }
+
+  /* ── Hero Section ─────────────────────────────────────────────────────── */
+  .hero {
+    @apply py-16 md:py-24 text-center relative overflow-hidden;
+    background: linear-gradient(135deg, #13132a 0%, #0d0d1a 100%);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .hero__eyebrow {
+    @apply inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-6;
+  }
+  .hero__title {
+    @apply text-4xl md:text-6xl font-heading font-extrabold mb-6 tracking-tight leading-tight text-white;
+    span {
+      @apply bg-gradient-hero bg-clip-text text-transparent;
+    }
+  }
+  .hero__subtitle {
+    @apply text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed;
+  }
+  .hero__actions {
+    @apply flex flex-col sm:flex-row gap-4 justify-center items-center;
+  }
+
+  /* Section headers */
+  .section {
+    @apply py-16 border-b border-border last:border-b-0;
+  }
+  .section__header {
+    @apply text-center max-w-2xl mx-auto mb-12;
+    h2 {
+      @apply text-3xl font-heading font-extrabold mb-4 text-white;
+    }
+    p {
+      @apply text-gray-400 text-lg;
+    }
+  }
 }
 
 /* ── Utilities ─────────────────────────────────────────────────────────────── */
 @layer utilities {
   .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+  .animate-fadein { animation: fadeIn 0.4s ease forwards; }
 }
