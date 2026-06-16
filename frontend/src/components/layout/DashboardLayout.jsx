@@ -1,14 +1,20 @@
 import { useState } from 'react'
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { 
   LayoutDashboard, BookOpen, Users, Settings, Bell, 
-  BarChart3, ShieldCheck, Menu, X 
+  BarChart3, ShieldCheck, Menu, X, LogOut
 } from 'lucide-react'
 
 export default function DashboardLayout() {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   const studentLinks = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'My Learning' },
@@ -95,7 +101,7 @@ export default function DashboardLayout() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-border">
+        <div className="mt-auto pt-6 border-t border-border flex flex-col gap-2">
           <div className="flex items-center gap-3 p-3 rounded-xl bg-surface2 border border-border">
             <div className="w-9 h-9 rounded-full bg-gradient-hero display flex items-center justify-center font-bold text-sm text-white flex-shrink-0">
               {user?.full_name?.[0] ?? '?'}
@@ -105,6 +111,14 @@ export default function DashboardLayout() {
               <div className="text-xs text-gray-400 capitalize truncate">{user?.role}</div>
             </div>
           </div>
+          <button
+            id="logout-btn"
+            onClick={handleLogout}
+            className="sidebar-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 

@@ -279,3 +279,358 @@
   .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
   .animate-fadein { animation: fadeIn 0.4s ease forwards; }
 }
+
+/* ── Learn Page ─────────────────────────────────────────────────────────────── */
+.learn-root {
+  @apply flex flex-col h-screen overflow-hidden bg-bg text-white;
+}
+
+.learn-topbar {
+  @apply flex items-center justify-between px-4 py-2 bg-surface border-b border-border shrink-0 z-20;
+  min-height: 52px;
+}
+
+.learn-topbar-left {
+  @apply flex items-center gap-3 flex-1 min-w-0;
+}
+
+.learn-topbar-center {
+  @apply flex-1 text-center;
+}
+
+.learn-topbar-right {
+  @apply flex items-center gap-2 flex-1 justify-end;
+}
+
+.learn-icon-btn {
+  @apply p-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface2 border-0 bg-transparent cursor-pointer transition-colors;
+  &:disabled { @apply opacity-30 cursor-not-allowed; }
+}
+
+.learn-back-link {
+  @apply flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors truncate;
+}
+
+.learn-body {
+  @apply flex flex-1 overflow-hidden;
+}
+
+.learn-sidebar {
+  @apply flex flex-col border-r border-border bg-surface shrink-0 overflow-y-auto transition-all duration-300;
+  width: 280px;
+}
+
+.learn-sidebar--closed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+.learn-sidebar--open {
+  width: 280px;
+}
+
+.learn-sidebar-header {
+  @apply flex items-center gap-2 px-4 py-3 border-b border-border shrink-0;
+}
+
+.learn-sidebar-progress {
+  @apply h-1 w-full bg-border shrink-0;
+}
+
+.learn-sidebar-progress-fill {
+  @apply h-full bg-gradient-hero transition-all duration-500;
+}
+
+.learn-sidebar-nav {
+  @apply flex-1 overflow-y-auto py-2;
+}
+
+.learn-module-btn {
+  @apply w-full flex items-center justify-between gap-2 px-4 py-3
+         bg-transparent border-0 cursor-pointer text-gray-400 hover:bg-surface2 hover:text-white
+         transition-colors text-left;
+}
+
+.learn-lesson-btn {
+  @apply w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400
+         bg-transparent border-0 cursor-pointer hover:bg-surface2 hover:text-white
+         transition-colors text-left;
+  &:disabled { @apply opacity-40 cursor-not-allowed; }
+}
+
+.learn-lesson-btn--active {
+  @apply bg-primary/10 text-primary;
+  &:hover { @apply bg-primary/15 text-primary; }
+}
+
+.learn-lesson-btn--locked {
+  @apply text-gray-600;
+}
+
+.learn-lesson-icon {
+  @apply w-4 h-4 flex items-center justify-center shrink-0;
+}
+
+.learn-main {
+  @apply flex-1 overflow-y-auto flex flex-col;
+}
+
+.learn-lesson-header {
+  @apply px-6 py-4 border-b border-border;
+}
+
+.learn-lesson-title {
+  @apply text-lg font-bold text-white;
+}
+
+.learn-lesson-desc {
+  @apply text-gray-400 text-sm mt-1;
+}
+
+.learn-tabs {
+  @apply flex border-b border-border px-6;
+}
+
+.learn-tab-btn {
+  @apply flex items-center gap-2 px-5 py-3 text-sm font-semibold text-gray-400
+         border-b-2 border-transparent bg-transparent cursor-pointer
+         hover:text-white transition-colors;
+}
+
+.learn-tab-btn--active {
+  @apply text-primary border-primary;
+}
+
+.learn-tab-content {
+  @apply flex-1 overflow-y-auto p-6;
+}
+
+/* ── Video Player ────────────────────────────────────────────────────────────── */
+.video-wrapper {
+  @apply relative w-full bg-black;
+  aspect-ratio: 16/9;
+}
+
+.learn-video {
+  @apply w-full h-full block transition-opacity duration-300;
+}
+
+.video-loading {
+  @apply absolute inset-0 flex items-center justify-center bg-black/60 z-10;
+}
+
+.video-placeholder {
+  @apply w-full flex flex-col items-center justify-center bg-black/40;
+  aspect-ratio: 16/9;
+}
+
+/* ── Q&A Panel ───────────────────────────────────────────────────────────────── */
+.qa-panel {
+  @apply flex flex-col gap-4 h-full;
+  min-height: 300px;
+}
+
+.qa-messages {
+  @apply flex-1 overflow-y-auto flex flex-col gap-4 min-h-[200px];
+}
+
+.qa-message {
+  @apply flex gap-3 items-start;
+}
+
+.qa-avatar {
+  @apply w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center text-white text-sm font-bold shrink-0;
+}
+
+.qa-message-body {
+  @apply flex-1;
+}
+
+.qa-message-meta {
+  @apply flex items-center gap-2 mb-1;
+}
+
+.qa-author {
+  @apply text-sm font-semibold text-white;
+}
+
+.qa-time {
+  @apply text-xs text-gray-500;
+}
+
+.qa-text {
+  @apply text-sm text-gray-300 leading-relaxed;
+}
+
+.qa-composer {
+  @apply flex gap-3 items-end border-t border-border pt-4;
+}
+
+.qa-input {
+  @apply flex-1 px-4 py-2.5 bg-surface2 border border-border rounded-xl
+         text-white text-sm placeholder-gray-500 outline-none resize-none
+         transition-all duration-200;
+  &:focus { @apply border-primary ring-2 ring-primary/20; }
+}
+
+/* ── Notes Panel ─────────────────────────────────────────────────────────────── */
+.notes-panel {
+  @apply flex flex-col gap-3;
+}
+
+.notes-header {
+  @apply flex items-center gap-2;
+}
+
+.notes-textarea {
+  @apply w-full px-4 py-3 bg-surface2 border border-border rounded-xl
+         text-white text-sm placeholder-gray-500 outline-none resize-y
+         transition-all duration-200;
+  min-height: 200px;
+  &:focus { @apply border-primary ring-2 ring-primary/20; }
+}
+
+.notes-footer {
+  @apply flex items-center justify-between;
+}
+
+/* ── Checkout Page ───────────────────────────────────────────────────────────── */
+.checkout-root {
+  @apply max-w-5xl mx-auto px-4 py-8;
+}
+
+.checkout-back {
+  @apply inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white
+         transition-colors mb-6;
+}
+
+.checkout-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+.checkout-summary-col,
+.checkout-payment-col {
+  @apply flex flex-col gap-4;
+}
+
+.checkout-card {
+  @apply bg-gradient-card border border-border rounded-2xl p-6;
+}
+
+.checkout-section-title {
+  @apply text-lg font-bold text-white mb-5;
+}
+
+.checkout-course-row {
+  @apply flex gap-4 items-start mb-5;
+}
+
+.checkout-thumbnail {
+  @apply w-28 h-16 object-cover rounded-lg shrink-0;
+}
+
+.checkout-course-info {
+  @apply flex-1 min-w-0;
+}
+
+.checkout-course-title {
+  @apply font-semibold text-white text-sm leading-snug mb-2;
+}
+
+.checkout-course-meta {
+  @apply flex flex-wrap gap-2;
+}
+
+.checkout-price-breakdown {
+  @apply space-y-3 bg-surface2 rounded-xl p-4;
+}
+
+.checkout-price-row {
+  @apply flex items-center justify-between text-sm;
+}
+
+.checkout-price-divider {
+  @apply border-t border-border;
+}
+
+.checkout-price-total {
+  @apply text-base font-semibold;
+}
+
+.checkout-guarantees {
+  @apply mt-5 space-y-2 list-none p-0;
+  li { @apply flex items-center gap-2 text-xs text-gray-400; }
+}
+
+.checkout-error {
+  @apply flex items-center gap-2 p-3 bg-accent/10 border border-accent/30 rounded-xl text-accent text-sm mb-4;
+}
+
+.checkout-free-section {
+  @apply flex flex-col items-center gap-4;
+}
+
+.checkout-free-badge {
+  @apply flex items-center gap-3 text-secondary font-bold text-lg;
+}
+
+.checkout-paid-section {
+  @apply flex flex-col gap-4;
+}
+
+.checkout-stripe-badge {
+  @apply flex items-center justify-center gap-2 text-xs text-gray-400 bg-surface2 rounded-xl py-2 px-4;
+}
+
+.checkout-card-logos {
+  @apply flex justify-center gap-2;
+}
+
+.checkout-card-chip {
+  @apply px-3 py-1.5 bg-surface2 border border-border rounded-lg text-xs font-bold text-gray-400;
+}
+
+.checkout-status-screen {
+  @apply min-h-[70vh] flex items-center justify-center p-4;
+}
+
+.checkout-status-card {
+  @apply max-w-md w-full text-center p-8 rounded-2xl border;
+}
+
+.checkout-status-card--success {
+  @apply bg-secondary/5 border-secondary/20;
+}
+
+.checkout-status-card--cancelled {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.checkout-status-icon {
+  @apply mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center;
+}
+
+.checkout-status-icon--success {
+  @apply bg-secondary/15 text-secondary;
+}
+
+.checkout-status-icon--cancelled {
+  @apply bg-accent/15 text-accent;
+}
+
+.checkout-status-title {
+  @apply text-2xl font-heading font-bold text-white mb-3;
+}
+
+.checkout-status-msg {
+  @apply text-gray-400 mb-5 leading-relaxed;
+}
+
+/* Flex utility for inline items  */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-1 { gap: 0.25rem; }
+.text-xs { font-size: 0.75rem; }
+.text-gray-400 { color: #9ca3af; }
+

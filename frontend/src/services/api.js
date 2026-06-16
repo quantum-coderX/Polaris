@@ -64,3 +64,35 @@ api.interceptors.response.use(
 )
 
 export default api
+
+// ─── Typed API helpers ────────────────────────────────────────────────────────
+
+/** Returns the pre-signed stream URL for a lesson */
+export const getStreamUrl = (lessonId) =>
+  api.get(`/lessons/${lessonId}/stream`).then((r) => r.data)
+
+/** Mark a lesson complete and update progress */
+export const postProgress = (courseId, lessonId) =>
+  api.post(`/enrollments/${courseId}/progress`, { lesson_id: lessonId }).then((r) => r.data)
+
+/** Fetch Q&A messages for a course */
+export const getQAMessages = (courseId) =>
+  api.get(`/qa/${courseId}/messages`).then((r) => r.data)
+
+/** Post a new Q&A message */
+export const postQAMessage = (courseId, body) =>
+  api.post(`/qa/${courseId}/messages`, { body }).then((r) => r.data)
+
+/** Start Stripe checkout — returns { checkout_url } */
+export const createCheckout = (courseId) =>
+  api
+    .post('/payments/checkout', {
+      course_id: courseId,
+      success_url: `${window.location.origin}/checkout/${courseId}?status=success`,
+      cancel_url: `${window.location.origin}/checkout/${courseId}?status=cancelled`,
+    })
+    .then((r) => r.data)
+
+/** Direct free-course enrollment */
+export const enrollFree = (courseId) =>
+  api.post(`/enrollments/${courseId}`).then((r) => r.data)

@@ -85,10 +85,20 @@ export default function StudentDashboard() {
 }
 
 function EnrollmentCard({ enrollment }) {
+  const thumbnail = enrollment.course_thumbnail
+    ?? `https://picsum.photos/seed/${enrollment.course_id}/120/68`
+  const title = enrollment.course_title ?? `Course #${enrollment.course_id}`
+
   return (
     <div className="card flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-      <div className="flex-1 w-full">
-        <div className="font-semibold text-white mb-2">Course #{enrollment.course_id}</div>
+      {/* Thumbnail */}
+      <img
+        src={thumbnail}
+        alt={title}
+        className="w-24 h-14 object-cover rounded-lg shrink-0 hidden md:block"
+      />
+      <div className="flex-1 w-full min-w-0">
+        <div className="font-semibold text-white mb-2 truncate">{title}</div>
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${enrollment.progress_percent}%` }} />
         </div>
@@ -99,10 +109,10 @@ function EnrollmentCard({ enrollment }) {
           Continue
         </Link>
         {enrollment.certificate_url && (
-          <a 
-            href={enrollment.certificate_url} 
-            target="_blank" 
-            rel="noreferrer" 
+          <a
+            href={enrollment.certificate_url}
+            target="_blank"
+            rel="noreferrer"
             className="btn btn-secondary btn-sm flex-1 md:flex-initial text-center"
           >
             Certificate
@@ -112,3 +122,4 @@ function EnrollmentCard({ enrollment }) {
     </div>
   )
 }
+

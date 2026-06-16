@@ -55,13 +55,27 @@ async def my_enrollments(
     current_user: User = Depends(require_student),
     db: AsyncSession = Depends(get_db),
 ):
+    from sqlalchemy.orm import joinedload
     result = await db.execute(
-        select(Enrollment).where(
+        select(Enrollment)
+        .where(
             Enrollment.student_id == current_user.id,
             Enrollment.status == EnrollmentStatus.active,
         )
+        .options(joinedload(Enrollment.course))
     )
-    return result.scalars().all()
+    enrollments = result.scalars().all()
+
+    # Build response with denormalized course info
+    out = []
+    for e in enrollments:
+        item = EnrollmentOut.model_validate(e)
+        if e.course:
+            item.course_title = e.course.title
+            item.course_slug = e.course.slug
+            item.course_thumbnail = e.course.thumbnail_url
+        out.append(item)
+    return out
 
 
 @router.get("/{course_id}", response_model=EnrollmentOut)

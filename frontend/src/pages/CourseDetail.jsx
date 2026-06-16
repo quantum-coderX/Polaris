@@ -8,6 +8,19 @@ import {
   PlayCircle, FileText, Lock, CheckCircle, ShoppingCart, BookOpen
 } from 'lucide-react'
 
+/** Parses a value that may be a JSON array string ["a","b"] or a plain newline-separated string */
+const parseJsonOrSplit = (value) => {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : [value]
+  } catch {
+    return value.split('\n').filter(Boolean)
+  }
+}
+
+
 export default function CourseDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -28,7 +41,7 @@ export default function CourseDetail() {
 
   const { data: reviews } = useQuery({
     queryKey: ['reviews', course?.id],
-    queryFn: () => api.get(`/reviews/${course.id}`).then(r => r.data),
+    queryFn: () => api.get(`/reviews/course/${course.id}`).then(r => r.data).catch(() => []),
     enabled: !!course?.id,
   })
 
@@ -148,7 +161,7 @@ export default function CourseDetail() {
           {course?.what_you_learn && (
             <Section title="What You'll Learn">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {course.what_you_learn.split('\n').filter(Boolean).map((item, i) => (
+                {parseJsonOrSplit(course.what_you_learn).map((item, i) => (
                   <div key={i} className="flex gap-2.5 items-start text-sm md:text-base">
                     <CheckCircle size={14} className="text-secondary mt-1 flex-shrink-0" />
                     <span>{item}</span>
@@ -219,7 +232,7 @@ export default function CourseDetail() {
             <div className="bg-surface border border-border rounded-2xl p-6">
               <h3 className="mb-4 text-base font-bold text-white">Requirements</h3>
               <div className="flex flex-col gap-2">
-                {course.requirements.split('\n').filter(Boolean).map((req, i) => (
+                {parseJsonOrSplit(course.requirements).map((req, i) => (
                   <div key={i} className="flex gap-2 text-sm">
                     <span className="text-primary font-bold">•</span>
                     <span className="text-gray-400">{req}</span>

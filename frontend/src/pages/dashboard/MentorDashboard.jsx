@@ -15,8 +15,9 @@ export default function MentorDashboard() {
 
   const { data: courses } = useQuery({
     queryKey: ['mentor-courses'],
-    queryFn: () => api.get('/courses?limit=50').then(r => r.data),
+    queryFn: () => api.get('/courses/mine').then(r => r.data),
   })
+
 
   return (
     <div className="animate-fade-in">
