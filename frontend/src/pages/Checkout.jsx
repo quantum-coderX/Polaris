@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import api, { createCheckout, enrollFree } from '../services/api'
 import {
   ShoppingCart, CheckCircle, XCircle, Loader2,
-  Shield, Clock, BookOpen, Star, ArrowLeft, CreditCard, Zap,
+  Shield, Clock, BookOpen, ArrowLeft, CreditCard, Zap,
 } from 'lucide-react'
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ export default function Checkout() {
                 >
                   {processing
                     ? <><Loader2 size={18} className="animate-spin" /> Processing…</>
-                    : <><BookOpen size={18} /> Enroll Now — It's Free</>
+                    : <><BookOpen size={18} /> Enroll Now &mdash; It&apos;s Free</>
                   }
                 </button>
               </div>
@@ -180,7 +180,7 @@ export default function Checkout() {
                   <CreditCard size={14} className="text-gray-400" />
                 </div>
                 <p className="text-gray-400 text-sm text-center mb-6">
-                  You'll be redirected to Stripe's secure checkout to complete payment.
+                   You&apos;ll be redirected to Stripe&apos;s secure checkout to complete payment.
                 </p>
 
                 {/* Card logos */}
@@ -231,7 +231,7 @@ function SuccessScreen({ course, courseId }) {
         <div className="checkout-status-icon checkout-status-icon--success">
           <CheckCircle size={56} />
         </div>
-        <h1 className="checkout-status-title">You're enrolled! 🎉</h1>
+        <h1 className="checkout-status-title">You&apos;re enrolled! 🎉</h1>
         <p className="checkout-status-msg">
           Payment confirmed. Your access to <strong>{course?.title ?? 'the course'}</strong> is ready.
         </p>
@@ -259,7 +259,7 @@ function CancelledScreen({ course, courseId, onRetry, processing }) {
         </div>
         <h1 className="checkout-status-title">Payment cancelled</h1>
         <p className="checkout-status-msg">
-          No charges were made. You can try again whenever you're ready.
+           No charges were made. You can try again whenever you&apos;re ready.
         </p>
         <div className="flex gap-3 flex-wrap justify-center">
           <button

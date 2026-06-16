@@ -32,7 +32,6 @@ export default function CourseEditor() {
 
   // Curriculum State
   const [expandedModules, setExpandedModules] = useState(new Set())
-  const [editingModuleId, setEditingModuleId] = useState(null)
   const [moduleTitleForm, setModuleTitleForm] = useState('')
   const [editingLessonId, setEditingLessonId] = useState(null)
   const [lessonForm, setLessonForm] = useState({
@@ -557,7 +556,7 @@ export default function CourseEditor() {
                     <div className="p-4 space-y-4 bg-bg/50">
                       {/* List lessons */}
                       <div className="space-y-2">
-                        {mod.lessons?.map((lesson, lessonIdx) => (
+                        {mod.lessons?.map((lesson, _lessonIdx) => (
                           <div key={lesson.id} className="flex flex-col p-4 bg-surface rounded-xl border border-border gap-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">

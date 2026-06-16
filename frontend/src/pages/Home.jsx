@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
-import { Search, Star, Clock, Users } from 'lucide-react'
+import { Search, Clock, Users } from 'lucide-react'
 
 export default function Home() {
   const [search, setSearch] = useState('')

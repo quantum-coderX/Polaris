@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
-import { Search, Clock, Users, X, Sliders } from 'lucide-react'
+import { Search, Clock, X, Sliders } from 'lucide-react'
 
 const LEVELS = ['beginner', 'intermediate', 'advanced']
 const LANGUAGES = ['English', 'Hindi', 'Tamil', 'Spanish', 'French']

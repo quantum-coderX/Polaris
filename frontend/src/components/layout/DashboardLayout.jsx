@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { 
-  LayoutDashboard, BookOpen, Users, Settings, Bell, 
+  LayoutDashboard, BookOpen, Users,
   BarChart3, ShieldCheck, Menu, X, LogOut
 } from 'lucide-react'
 

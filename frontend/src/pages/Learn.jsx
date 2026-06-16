@@ -6,7 +6,7 @@ import api, { getStreamUrl, postProgress, getQAMessages, postQAMessage } from '.
 import {
   PlayCircle, CheckCircle, Lock, ChevronLeft, ChevronRight,
   MessageSquare, StickyNote, BookOpen, Loader2, Send,
-  ChevronDown, ChevronUp, Menu, X, Volume2, Maximize2,
+  ChevronDown, ChevronUp, Menu, X,
 } from 'lucide-react'
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ export default function Learn() {
     if (modules.length > 0) {
       setExpandedModules(new Set(modules.map((_, i) => i)))
     }
-  }, [modules.length])
+  }, [modules])
 
 
   // ── Enrollment / progress ─────────────────────────────────────────────────
@@ -368,7 +368,7 @@ function QAPanel({ courseId, accessToken }) {
           if (prev.some((m) => m.id === msg.id)) return prev
           return [...prev, msg]
         })
-      } catch (_) {}
+      } catch (_e) { /* ignore malformed WS messages */ }
     }
 
     return () => ws.close()
