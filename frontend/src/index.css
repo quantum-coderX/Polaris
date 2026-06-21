@@ -634,3 +634,284 @@
 .text-xs { font-size: 0.75rem; }
 .text-gray-400 { color: #9ca3af; }
 
+/* ── Quiz Panel ──────────────────────────────────────────────────────────────── */
+.quiz-panel {
+  @apply flex flex-col gap-4;
+}
+
+.quiz-empty {
+  @apply flex flex-col items-center justify-center py-16;
+}
+
+.quiz-header {
+  @apply flex items-start justify-between gap-4 pb-3 border-b border-border;
+}
+
+.quiz-questions {
+  @apply flex flex-col gap-4;
+}
+
+.quiz-question {
+  @apply bg-surface border border-border rounded-xl p-5 transition-all duration-200;
+}
+.quiz-question:hover {
+  @apply border-primary/30;
+}
+
+.quiz-question-header {
+  @apply flex items-center gap-2 mb-2;
+}
+
+.quiz-question-num {
+  @apply text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md;
+}
+
+.quiz-question-type {
+  @apply text-[10px] uppercase tracking-wider text-gray-500 font-semibold;
+}
+
+.quiz-question-text {
+  @apply text-sm text-gray-200 mb-3 leading-relaxed;
+}
+
+.quiz-options {
+  @apply flex flex-col gap-2;
+}
+
+.quiz-options--row {
+  @apply flex-row gap-3;
+}
+
+.quiz-option {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-surface2
+         cursor-pointer transition-all duration-200 text-sm text-gray-300;
+}
+.quiz-option:hover {
+  @apply border-primary/40 bg-primary/5;
+}
+
+.quiz-option--selected {
+  @apply border-primary bg-primary/10 text-white;
+}
+
+.quiz-option--tf {
+  @apply flex-1 justify-center font-semibold;
+}
+
+.quiz-option-radio {
+  @apply w-4 h-4 rounded-full border-2 border-gray-500 flex items-center justify-center shrink-0 transition-colors;
+}
+.quiz-option--selected .quiz-option-radio {
+  @apply border-primary;
+}
+
+.quiz-option-radio-dot {
+  @apply w-2 h-2 rounded-full bg-primary;
+}
+
+.quiz-option-text {
+  @apply flex-1;
+}
+
+.quiz-footer {
+  @apply flex items-center justify-between pt-4 border-t border-border;
+}
+
+/* ── Quiz Results ────────────────────────────────────────────────────────────── */
+.quiz-result-card {
+  @apply rounded-2xl p-8 text-center border;
+}
+.quiz-result-card--pass {
+  @apply bg-secondary/5 border-secondary/20;
+}
+.quiz-result-card--fail {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.quiz-result-icon {
+  @apply mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center;
+}
+.quiz-result-card--pass .quiz-result-icon {
+  @apply bg-secondary/15;
+}
+.quiz-result-card--fail .quiz-result-icon {
+  @apply bg-accent/15;
+}
+
+.quiz-result-title {
+  @apply text-xl font-heading font-bold text-white mb-2;
+}
+
+.quiz-result-score {
+  @apply flex flex-col items-center gap-1;
+}
+
+.quiz-result-score-value {
+  @apply text-4xl font-heading font-extrabold text-white;
+}
+
+.quiz-result-score-label {
+  @apply text-sm text-gray-400;
+}
+
+/* ── Quiz Feedback ───────────────────────────────────────────────────────────── */
+.quiz-feedback {
+  @apply mt-4;
+}
+
+.quiz-feedback-item {
+  @apply p-4 rounded-xl border mb-2;
+}
+.quiz-feedback-item--correct {
+  @apply bg-secondary/5 border-secondary/20;
+}
+.quiz-feedback-item--wrong {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.quiz-feedback-header {
+  @apply flex items-center gap-2 mb-1;
+}
+
+.quiz-feedback-num {
+  @apply text-xs font-bold text-gray-400;
+}
+
+/* ── Quiz Attempts ───────────────────────────────────────────────────────────── */
+.quiz-attempts {
+  @apply mt-4 rounded-xl border border-border overflow-hidden;
+}
+
+.quiz-attempts-table {
+  @apply w-full text-sm;
+}
+
+.quiz-attempts-table thead {
+  @apply bg-surface2;
+}
+
+.quiz-attempts-table th {
+  @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-3;
+}
+
+.quiz-attempts-table td {
+  @apply px-4 py-3 text-sm text-gray-300 border-t border-border;
+}
+
+/* ── Certificate Page ────────────────────────────────────────────────────────── */
+.cert-page {
+  @apply min-h-screen flex items-center justify-center p-6 bg-bg;
+}
+
+.cert-loading {
+  @apply flex flex-col items-center;
+}
+
+.cert-card {
+  @apply max-w-lg w-full rounded-3xl p-10 text-center border relative overflow-hidden;
+}
+
+.cert-card--valid {
+  @apply bg-gradient-card border-primary/30;
+  box-shadow: 0 0 60px rgba(124, 92, 252, 0.12), 0 0 120px rgba(0, 212, 200, 0.06);
+}
+
+.cert-card--invalid {
+  @apply bg-gradient-card border-accent/30;
+}
+
+.cert-verified-banner {
+  @apply inline-flex items-center gap-2 bg-secondary/15 text-secondary text-xs font-bold
+         px-4 py-1.5 rounded-full mb-6 mx-auto;
+}
+
+.cert-logo {
+  @apply text-3xl font-heading font-extrabold bg-gradient-hero bg-clip-text text-transparent mb-1;
+}
+
+.cert-heading {
+  @apply text-sm text-gray-400 uppercase tracking-widest font-semibold mb-6;
+}
+
+.cert-divider {
+  @apply w-24 h-px bg-gradient-hero mx-auto my-6;
+}
+
+.cert-label {
+  @apply text-xs text-gray-500 mb-1;
+}
+
+.cert-student-name {
+  @apply text-2xl md:text-3xl font-heading font-extrabold text-white mb-4;
+}
+
+.cert-course-title {
+  @apply text-lg font-heading font-bold bg-gradient-hero bg-clip-text text-transparent mb-6;
+}
+
+.cert-meta {
+  @apply flex flex-col sm:flex-row gap-4 justify-center text-xs text-gray-400;
+}
+
+.cert-meta-item {
+  @apply flex items-center gap-1.5;
+}
+
+.cert-status-icon {
+  @apply mx-auto mb-6;
+}
+
+.cert-status-icon--invalid {
+  @apply text-accent;
+}
+
+.cert-title {
+  @apply text-2xl font-heading font-bold text-white mb-3;
+}
+
+.cert-subtitle {
+  @apply text-gray-400 leading-relaxed;
+}
+
+/* ── Admin Users Table ───────────────────────────────────────────────────────── */
+.admin-users-table-wrap {
+  @apply rounded-2xl border border-border overflow-x-auto bg-surface;
+}
+
+.admin-users-table {
+  @apply w-full text-sm min-w-[640px];
+}
+
+.admin-users-table thead {
+  @apply bg-surface2;
+}
+
+.admin-users-table th {
+  @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 py-3;
+}
+
+.admin-users-table td {
+  @apply px-5 py-4 text-gray-300 border-t border-border;
+}
+
+.admin-users-table tr:hover td {
+  @apply bg-surface2/50;
+}
+
+.admin-user-avatar {
+  @apply w-9 h-9 rounded-full bg-gradient-hero flex items-center justify-center text-white text-sm font-bold shrink-0;
+}
+
+/* ── Screen reader only ──────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+

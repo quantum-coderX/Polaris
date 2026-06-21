@@ -18,7 +18,9 @@ import Checkout from './pages/Checkout'
 import StudentDashboard from './pages/dashboard/StudentDashboard'
 import MentorDashboard from './pages/dashboard/MentorDashboard'
 import AdminDashboard from './pages/dashboard/AdminDashboard'
+import AdminUsers from './pages/dashboard/AdminUsers'
 import CourseEditor from './pages/mentor/CourseEditor'
+import CertificatePage from './pages/CertificatePage'
 
 // Guards
 const ProtectedRoute = ({ children, roles }) => {
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/courses" element={<CourseList />} />
           <Route path="/courses/:slug" element={<CourseDetail />} />
+          <Route path="/certificates/verify/:certId" element={<CertificatePage />} />
         </Route>
 
         {/* Student protected */}
@@ -58,6 +61,7 @@ export default function App() {
         {/* Admin protected */}
         <Route element={<ProtectedRoute roles={['admin']}><DashboardLayout /></ProtectedRoute>}>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
         </Route>
 
         {/* Fallback */}

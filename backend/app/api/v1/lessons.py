@@ -89,6 +89,21 @@ async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_db)):
     return lesson
 
 
+@router.get("/{lesson_id}/quiz")
+async def get_lesson_quiz(
+    lesson_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the quiz attached to this lesson, or 404 if none exists."""
+    from app.models.quiz import Quiz
+    result = await db.execute(select(Quiz).where(Quiz.lesson_id == lesson_id))
+    quiz = result.scalar_one_or_none()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="No quiz for this lesson")
+    return quiz
+
+
 @router.post("/{lesson_id}/upload-url", response_model=PresignedUrlResponse)
 async def get_upload_url(
     lesson_id: int,

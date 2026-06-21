@@ -96,3 +96,31 @@ export const createCheckout = (courseId) =>
 /** Direct free-course enrollment */
 export const enrollFree = (courseId) =>
   api.post(`/enrollments/${courseId}`).then((r) => r.data)
+
+// ─── Quiz helpers ─────────────────────────────────────────────────────────────
+
+/** Get the quiz attached to a lesson (404 if none) */
+export const getQuizForLesson = (lessonId) =>
+  api.get(`/lessons/${lessonId}/quiz`).then((r) => r.data)
+
+/** Get quiz questions (without correct answers) */
+export const getQuizQuestions = (quizId) =>
+  api.get(`/quizzes/${quizId}/questions`).then((r) => r.data)
+
+/** Submit answers for grading — returns QuizResult */
+export const submitQuiz = (quizId, answers) =>
+  api.post(`/quizzes/${quizId}/submit`, { answers }).then((r) => r.data)
+
+/** Get student's past attempts on a quiz */
+export const getQuizAttempts = (quizId) =>
+  api.get(`/quizzes/${quizId}/attempts`).then((r) => r.data)
+
+// ─── Certificate helpers ──────────────────────────────────────────────────────
+
+/** Generate (or re-fetch) a certificate for a completed course */
+export const generateCertificate = (courseId) =>
+  api.post(`/certificates/${courseId}`).then((r) => r.data)
+
+/** Public verify endpoint (no auth) */
+export const verifyCertificate = (certId) =>
+  api.get(`/certificates/verify/${certId}`).then((r) => r.data)

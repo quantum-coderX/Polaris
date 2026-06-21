@@ -2,11 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
-import api, { getStreamUrl, postProgress, getQAMessages, postQAMessage } from '../services/api'
+import api, { getStreamUrl, postProgress, getQAMessages, postQAMessage, getQuizForLesson, getQuizQuestions, submitQuiz, getQuizAttempts } from '../services/api'
 import {
   PlayCircle, CheckCircle, Lock, ChevronLeft, ChevronRight,
   MessageSquare, StickyNote, BookOpen, Loader2, Send,
-  ChevronDown, ChevronUp, Menu, X,
+  ChevronDown, ChevronUp, Menu, X, HelpCircle, Award,
+  RotateCcw, Trophy, XCircle as XCircleIcon, Clock,
 } from 'lucide-react'
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
@@ -240,6 +241,13 @@ export default function Learn() {
               <MessageSquare size={15} /> Q&amp;A
             </button>
             <button
+              id="tab-quiz"
+              className={`learn-tab-btn ${activeTab === 'quiz' ? 'learn-tab-btn--active' : ''}`}
+              onClick={() => setActiveTab('quiz')}
+            >
+              <HelpCircle size={15} /> Quiz
+            </button>
+            <button
               id="tab-notes"
               className={`learn-tab-btn ${activeTab === 'notes' ? 'learn-tab-btn--active' : ''}`}
               onClick={() => setActiveTab('notes')}
@@ -251,6 +259,9 @@ export default function Learn() {
           <div className="learn-tab-content">
             {activeTab === 'qa' && (
               <QAPanel courseId={courseId} accessToken={accessToken} />
+            )}
+            {activeTab === 'quiz' && (
+              <QuizPanel lessonId={currentLesson?.id} />
             )}
             {activeTab === 'notes' && (
               <NotesPanel courseId={courseId} lessonId={currentLesson?.id} />
@@ -458,6 +469,297 @@ function QAPanel({ courseId, accessToken }) {
           <span className="hidden sm:inline">Send</span>
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── Quiz Panel ──────────────────────────────────────────────────────────────
+
+function QuizPanel({ lessonId }) {
+  const [answers, setAnswers] = useState({})
+  const [result, setResult] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [showAttempts, setShowAttempts] = useState(false)
+
+  // Discover quiz for this lesson
+  const { data: quiz, isLoading: quizLoading, error: quizError } = useQuery({
+    queryKey: ['lesson-quiz', lessonId],
+    queryFn: () => getQuizForLesson(lessonId),
+    enabled: !!lessonId,
+    retry: false,
+  })
+
+  // Fetch questions when quiz is found
+  const { data: questions = [] } = useQuery({
+    queryKey: ['quiz-questions', quiz?.id],
+    queryFn: () => getQuizQuestions(quiz.id),
+    enabled: !!quiz?.id,
+  })
+
+  // Fetch past attempts
+  const { data: attempts = [], refetch: refetchAttempts } = useQuery({
+    queryKey: ['quiz-attempts', quiz?.id],
+    queryFn: () => getQuizAttempts(quiz.id),
+    enabled: !!quiz?.id,
+  })
+
+  // Reset state when lesson changes
+  useEffect(() => {
+    setAnswers({})
+    setResult(null)
+    setShowAttempts(false)
+  }, [lessonId])
+
+  const handleAnswer = (questionId, value) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }))
+  }
+
+  const handleSubmit = async () => {
+    if (!quiz) return
+    setSubmitting(true)
+    try {
+      const res = await submitQuiz(quiz.id, answers)
+      setResult(res)
+      refetchAttempts()
+    } catch (err) {
+      alert(err?.response?.data?.detail || 'Failed to submit quiz')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleRetry = () => {
+    setAnswers({})
+    setResult(null)
+  }
+
+  // No quiz for this lesson
+  if (!quizLoading && (quizError || !quiz)) {
+    return (
+      <div className="quiz-empty">
+        <HelpCircle size={48} className="text-gray-600 mb-3" />
+        <p className="text-gray-400 text-sm">No quiz available for this lesson.</p>
+      </div>
+    )
+  }
+
+  if (quizLoading) {
+    return (
+      <div className="quiz-empty">
+        <Loader2 size={28} className="animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Show result screen after submission
+  if (result) {
+    return (
+      <div className="quiz-panel animate-fade-in">
+        <div className={`quiz-result-card ${result.passed ? 'quiz-result-card--pass' : 'quiz-result-card--fail'}`}>
+          <div className="quiz-result-icon">
+            {result.passed
+              ? <Trophy size={40} className="text-secondary" />
+              : <XCircleIcon size={40} className="text-accent" />}
+          </div>
+          <h3 className="quiz-result-title">
+            {result.passed ? 'Congratulations!' : 'Not quite there yet'}
+          </h3>
+          <div className="quiz-result-score">
+            <span className="quiz-result-score-value">{result.score}%</span>
+            <span className="quiz-result-score-label">
+              {result.correct_count}/{result.total_questions} correct · Pass: {result.pass_score}%
+            </span>
+          </div>
+        </div>
+
+        {/* Per-question feedback */}
+        <div className="quiz-feedback">
+          <h4 className="text-sm font-bold text-white mb-3">Question Review</h4>
+          {result.feedback.map((fb, i) => (
+            <div key={fb.question_id} className={`quiz-feedback-item ${fb.correct ? 'quiz-feedback-item--correct' : 'quiz-feedback-item--wrong'}`}>
+              <div className="quiz-feedback-header">
+                <span className="quiz-feedback-num">Q{i + 1}</span>
+                {fb.correct
+                  ? <CheckCircle size={14} className="text-secondary" />
+                  : <XCircleIcon size={14} className="text-accent" />}
+              </div>
+              <p className="text-sm text-gray-300 mb-1">{fb.question_text}</p>
+              {!fb.correct && (
+                <p className="text-xs text-accent">Your answer: {fb.your_answer || '(blank)'} · Correct: {fb.correct_answer}</p>
+              )}
+              {fb.explanation && (
+                <p className="text-xs text-gray-500 mt-1 italic">{fb.explanation}</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 mt-4">
+          <button className="btn btn-primary" onClick={handleRetry}>
+            <RotateCcw size={15} /> Try Again
+          </button>
+          <button className="btn btn-secondary" onClick={() => setShowAttempts((v) => !v)}>
+            <Clock size={15} /> {showAttempts ? 'Hide' : 'Past'} Attempts ({attempts.length})
+          </button>
+        </div>
+
+        {showAttempts && <AttemptsTable attempts={attempts} passScore={result.pass_score} />}
+      </div>
+    )
+  }
+
+  // Quiz-taking view
+  const answeredCount = Object.keys(answers).length
+  const totalQ = questions.length
+
+  return (
+    <div className="quiz-panel animate-fade-in">
+      <div className="quiz-header">
+        <div>
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <Award size={16} className="text-primary" /> {quiz.title}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">Pass score: {quiz.pass_score}% · {totalQ} question{totalQ !== 1 ? 's' : ''}</p>
+        </div>
+        {attempts.length > 0 && (
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowAttempts((v) => !v)}>
+            <Clock size={13} /> Attempts ({attempts.length})
+          </button>
+        )}
+      </div>
+
+      {showAttempts && <AttemptsTable attempts={attempts} passScore={quiz.pass_score} />}
+
+      <div className="quiz-questions">
+        {questions.map((q, i) => (
+          <QuestionCard
+            key={q.id}
+            question={q}
+            index={i}
+            value={answers[q.id] ?? ''}
+            onChange={(val) => handleAnswer(q.id, val)}
+          />
+        ))}
+      </div>
+
+      <div className="quiz-footer">
+        <span className="text-xs text-gray-500">{answeredCount}/{totalQ} answered</span>
+        <button
+          id="quiz-submit-btn"
+          className="btn btn-primary"
+          disabled={submitting || answeredCount === 0}
+          onClick={handleSubmit}
+        >
+          {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+          Submit Quiz
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
+function QuestionCard({ question, index, value, onChange }) {
+  const options = (() => {
+    if (!question.options) return []
+    try { return JSON.parse(question.options) } catch { return [] }
+  })()
+
+  return (
+    <div className="quiz-question">
+      <div className="quiz-question-header">
+        <span className="quiz-question-num">Q{index + 1}</span>
+        <span className="quiz-question-type">{question.question_type.replace('_', ' ')}</span>
+      </div>
+      <p className="quiz-question-text">{question.question_text}</p>
+
+      {question.question_type === 'multiple_choice' && (
+        <div className="quiz-options">
+          {options.map((opt, i) => (
+            <label
+              key={i}
+              className={`quiz-option ${value === String(i) ? 'quiz-option--selected' : ''}`}
+            >
+              <input
+                type="radio"
+                name={`q-${question.id}`}
+                value={String(i)}
+                checked={value === String(i)}
+                onChange={() => onChange(String(i))}
+                className="sr-only"
+              />
+              <span className="quiz-option-radio">
+                {value === String(i) && <span className="quiz-option-radio-dot" />}
+              </span>
+              <span className="quiz-option-text">{opt}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {question.question_type === 'true_false' && (
+        <div className="quiz-options quiz-options--row">
+          {['True', 'False'].map((tf) => (
+            <label
+              key={tf}
+              className={`quiz-option quiz-option--tf ${value === tf.toLowerCase() ? 'quiz-option--selected' : ''}`}
+            >
+              <input
+                type="radio"
+                name={`q-${question.id}`}
+                value={tf.toLowerCase()}
+                checked={value === tf.toLowerCase()}
+                onChange={() => onChange(tf.toLowerCase())}
+                className="sr-only"
+              />
+              <span className="quiz-option-text">{tf}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {question.question_type === 'short_answer' && (
+        <input
+          type="text"
+          className="form-input mt-2"
+          placeholder="Type your answer…"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </div>
+  )
+}
+
+
+function AttemptsTable({ attempts, passScore }) {
+  if (!attempts.length) return <p className="text-xs text-gray-500 mt-3">No previous attempts.</p>
+  return (
+    <div className="quiz-attempts">
+      <table className="quiz-attempts-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Score</th>
+            <th>Result</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attempts.map((a, i) => (
+            <tr key={a.id}>
+              <td>{attempts.length - i}</td>
+              <td className="font-bold">{a.score}%</td>
+              <td>
+                <span className={`badge ${a.passed ? 'badge-success' : 'badge-danger'}`}>
+                  {a.passed ? 'Passed' : 'Failed'}
+                </span>
+              </td>
+              <td className="text-gray-500">{new Date(a.submitted_at).toLocaleDateString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
