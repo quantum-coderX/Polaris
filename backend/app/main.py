@@ -13,7 +13,7 @@ from app.core.limiter import limiter, rate_limit_exceeded_handler
 from app.api.v1 import (
     auth, users, courses, lessons, enrollments,
     payments, reviews, qa, search, notifications,
-    admin, quizzes, certificates,
+    admin, quizzes, certificates, gamification,
 )
 
 settings = get_settings()
@@ -69,6 +69,7 @@ app.include_router(notifications.router, prefix=PREFIX)
 app.include_router(admin.router,         prefix=PREFIX)
 app.include_router(quizzes.router,       prefix=PREFIX)
 app.include_router(certificates.router,  prefix=PREFIX)
+app.include_router(gamification.router,  prefix=PREFIX)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

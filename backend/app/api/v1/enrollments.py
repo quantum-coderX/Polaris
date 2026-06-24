@@ -11,6 +11,11 @@ from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, LessonProgress, EnrollmentStatus
 from app.models.lesson import Lesson
 from app.models.payment import Payment, PaymentStatus
+from app.core.gamification_service import (
+    award_points, record_activity,
+    POINTS_LESSON_COMPLETE,
+)
+from app.models.gamification import PointReason
 
 router = APIRouter(prefix="/enrollments", tags=["Enrollments"])
 
@@ -126,6 +131,7 @@ async def update_progress(
         lp = LessonProgress(enrollment_id=enrollment.id, lesson_id=body.lesson_id)
 
     lp.watch_time_seconds = max(lp.watch_time_seconds, body.watch_time_seconds)
+    was_completed_before = lp.is_completed
     lp.is_completed = body.is_completed
     if body.is_completed and not lp.completed_at:
         lp.completed_at = datetime.now(timezone.utc)
@@ -159,4 +165,19 @@ async def update_progress(
         enrollment.status = EnrollmentStatus.completed
 
     db.add(enrollment)
+
+    # ── Gamification hooks (non-blocking) ─────────────────────────────────────
+    if body.is_completed and not was_completed_before:
+        try:
+            await award_points(
+                db, current_user.id,
+                POINTS_LESSON_COMPLETE,
+                PointReason.lesson_complete,
+                description=f"Completed lesson {body.lesson_id}",
+                reference_id=f"lesson:{body.lesson_id}",
+            )
+            await record_activity(db, current_user.id)
+        except Exception:
+            pass  # Gamification must never break core learning
+
     return {"progress_percent": enrollment.progress_percent, "completed": enrollment.status == EnrollmentStatus.completed}
