@@ -1,4 +1,3 @@
-// Mentor Dashboard — analytics + my courses list
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, BookOpen, Users, DollarSign, Star } from 'lucide-react'
@@ -16,61 +15,71 @@ export default function MentorDashboard() {
 
   const { data: courses } = useQuery({
     queryKey: ['mentor-courses'],
-    queryFn: () => api.get('/courses?limit=50').then(r => r.data),
+    queryFn: () => api.get('/courses/mine').then(r => r.data),
   })
 
+
   return (
-    <div className="animate-fadein">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div className="animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 style={{ fontSize: '1.75rem' }}>Mentor Dashboard</h1>
-          <p className="text-muted">Manage your courses and track performance</p>
+          <h1 className="text-2xl md:text-3xl font-heading text-white">Mentor Dashboard</h1>
+          <p className="text-gray-400">Manage your courses and track performance</p>
         </div>
-        <Link to="/mentor/courses/new" className="btn btn-primary">
+        <Link to="/mentor/courses/new" className="btn btn-primary w-full sm:w-auto">
           <Plus size={18} /> New Course
         </Link>
       </div>
 
-      {/* Analytics */}
-      <div className="grid-4" style={{ marginBottom: '2rem' }}>
-        <div className="stat-card glow-pulse">
-          <div className="stat-card__label"><Users size={14} style={{ display: 'inline' }} /> Students</div>
-          <div className="stat-card__value">{analytics?.total_enrollments ?? 0}</div>
+      {/* Analytics Grid */}
+      <div className="grid-4 mb-8">
+        <div className="stat-card">
+          <div className="stat-label flex items-center gap-1.5"><Users size={14} /> Students</div>
+          <div className="stat-value">{analytics?.total_enrollments ?? 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label"><DollarSign size={14} style={{ display: 'inline' }} /> Revenue</div>
-          <div className="stat-card__value">${analytics?.total_revenue?.toFixed(2) ?? '0.00'}</div>
+          <div className="stat-label flex items-center gap-1.5"><DollarSign size={14} /> Revenue</div>
+          <div className="stat-value">${analytics?.total_revenue?.toFixed(2) ?? '0.00'}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label"><Star size={14} style={{ display: 'inline' }} /> Avg Rating</div>
-          <div className="stat-card__value">{analytics?.average_rating ?? '—'}</div>
+          <div className="stat-label flex items-center gap-1.5"><Star size={14} /> Avg Rating</div>
+          <div className="stat-value">{analytics?.average_rating ?? '—'}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__label"><BookOpen size={14} style={{ display: 'inline' }} /> Courses</div>
-          <div className="stat-card__value">{analytics?.published_courses ?? 0}</div>
+          <div className="stat-label flex items-center gap-1.5"><BookOpen size={14} /> Courses</div>
+          <div className="stat-value">{analytics?.published_courses ?? 0}</div>
         </div>
       </div>
 
       {/* Course List */}
-      <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>My Courses</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {courses?.map(course => (
-          <div key={course.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 600 }}>{course.title}</div>
-              <div className="text-muted text-sm">{course.level} · {course.language}</div>
+      <h2 className="text-lg font-heading font-bold mb-4 text-white">My Courses</h2>
+      {!courses?.length ? (
+        <div className="card text-center p-12">
+          <BookOpen size={48} className="mx-auto mb-4 text-gray-500" />
+          <h3 className="text-lg font-bold mb-2">No courses created yet</h3>
+          <p className="text-gray-400 mb-6">Create your first course to begin teaching!</p>
+          <Link to="/mentor/courses/new" className="btn btn-primary">Create Course</Link>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {courses.map(course => (
+            <div key={course.id} className="card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5">
+              <div>
+                <div className="font-semibold text-white text-base mb-1">{course.title}</div>
+                <div className="text-gray-400 text-xs capitalize">{course.level} · {course.language}</div>
+              </div>
+              <div className="flex gap-3 items-center w-full sm:w-auto justify-between sm:justify-start">
+                <span className={`badge ${
+                  course.status === 'published' ? 'badge-success' :
+                  course.status === 'pending' ? 'badge-warning' :
+                  course.status === 'rejected' ? 'badge-danger' : 'badge-primary'
+                }`}>{course.status}</span>
+                <Link to={`/mentor/courses/${course.id}/edit`} className="btn btn-secondary btn-sm">Edit</Link>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span className={`badge ${
-                course.status === 'published' ? 'badge-success' :
-                course.status === 'pending' ? 'badge-warning' :
-                course.status === 'rejected' ? 'badge-danger' : 'badge-primary'
-              }`}>{course.status}</span>
-              <Link to={`/mentor/courses/${course.id}/edit`} className="btn btn-secondary btn-sm">Edit</Link>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

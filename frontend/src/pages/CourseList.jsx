@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
-import { Search, Filter, Clock, Star, ChevronDown, X, Sliders } from 'lucide-react'
+import { Search, Clock, X, Sliders } from 'lucide-react'
 
 const LEVELS = ['beginner', 'intermediate', 'advanced']
 const LANGUAGES = ['English', 'Hindi', 'Tamil', 'Spanish', 'French']
@@ -41,12 +41,12 @@ export default function CourseList() {
     staleTime: 30_000,
   })
 
-  const handleSearch = useCallback((e) => {
+  const handleSearch = (e) => {
     e.preventDefault()
     const p = new URLSearchParams(searchParams)
     if (q) p.set('q', q); else p.delete('q')
     setSearchParams(p)
-  }, [q, searchParams, setSearchParams])
+  }
 
   const setFilter = (key, val) => {
     const p = new URLSearchParams(searchParams)
@@ -62,64 +62,56 @@ export default function CourseList() {
   const activeFilters = [level, language, isFree, minPrice, maxPrice].filter(Boolean).length
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div className="min-h-screen bg-bg">
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0d0d1a 100%)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '3rem 0 2rem',
-      }}>
+      <div className="bg-gradient-to-br from-surface2 via-[#16213e] to-bg border-b border-border py-12 md:py-16">
         <div className="container">
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-            Browse <span style={{ background: 'var(--gradient-hero)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Courses</span>
+          <h1 className="text-3xl md:text-5xl font-heading mb-2 text-white">
+            Browse <span className="bg-gradient-hero bg-clip-text text-transparent">Courses</span>
           </h1>
-          <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
+          <p className="text-gray-400 mb-6">
             {courses ? `${courses.length} courses found` : 'Explore thousands of expert-led courses'}
           </p>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem', maxWidth: 700 }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl w-full">
+            <div className="relative flex-grow">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 id="course-search"
-                className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
+                className="form-input pl-10"
                 placeholder="Search courses, topics, skills..."
                 value={q}
                 onChange={e => setQ(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn btn-primary">Search</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowFilters(!showFilters)}
-              style={{ gap: '0.5rem', position: 'relative' }}>
-              <Sliders size={16} /> Filters
-              {activeFilters > 0 && (
-                <span style={{
-                  position: 'absolute', top: -6, right: -6, background: 'var(--color-primary)',
-                  color: '#fff', borderRadius: '50%', width: 18, height: 18,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700
-                }}>{activeFilters}</span>
-              )}
-            </button>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <button type="submit" className="btn btn-primary flex-1 sm:flex-initial">Search</button>
+              <button 
+                type="button" 
+                className="btn btn-secondary flex items-center justify-center gap-2 relative flex-1 sm:flex-initial" 
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Sliders size={16} /> Filters
+                {activeFilters > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">
+                    {activeFilters}
+                  </span>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
 
-      <div className="container" style={{ padding: '2rem 1rem' }}>
+      <div className="container py-8">
         {/* Filter Panel */}
         {showFilters && (
-          <div style={{
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 16, padding: '1.5rem',
-            marginBottom: '2rem',
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem'
-          }}>
+          <div className="bg-surface border border-border rounded-2xl p-6 mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end animate-fade-in">
             {/* Level */}
             <div>
-              <label className="form-label">Level</label>
-              <select className="form-select" value={level} onChange={e => setFilter('level', e.target.value)}>
+              <label className="form-label" htmlFor="filter-level">Level</label>
+              <select id="filter-level" className="form-select" value={level} onChange={e => setFilter('level', e.target.value)}>
                 <option value="">All Levels</option>
                 {LEVELS.map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
               </select>
@@ -127,17 +119,17 @@ export default function CourseList() {
 
             {/* Language */}
             <div>
-              <label className="form-label">Language</label>
-              <select className="form-select" value={language} onChange={e => setFilter('language', e.target.value)}>
+              <label className="form-label" htmlFor="filter-lang">Language</label>
+              <select id="filter-lang" className="form-select" value={language} onChange={e => setFilter('language', e.target.value)}>
                 <option value="">All Languages</option>
                 {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
 
-            {/* Price */}
+            {/* Price Availability */}
             <div>
-              <label className="form-label">Availability</label>
-              <select className="form-select" value={isFree} onChange={e => setFilter('is_free', e.target.value)}>
+              <label className="form-label" htmlFor="filter-price">Availability</label>
+              <select id="filter-price" className="form-select" value={isFree} onChange={e => setFilter('is_free', e.target.value)}>
                 <option value="">All Courses</option>
                 <option value="true">Free Only</option>
                 <option value="false">Paid Only</option>
@@ -146,18 +138,18 @@ export default function CourseList() {
 
             {/* Price Range */}
             <div>
-              <label className="form-label">Min Price ($)</label>
-              <input className="form-input" type="number" min={0} value={minPrice}
+              <label className="form-label" htmlFor="filter-min-price">Min Price ($)</label>
+              <input id="filter-min-price" className="form-input" type="number" min={0} value={minPrice}
                 onChange={e => setFilter('min_price', e.target.value)} placeholder="0" />
             </div>
             <div>
-              <label className="form-label">Max Price ($)</label>
-              <input className="form-input" type="number" min={0} value={maxPrice}
+              <label className="form-label" htmlFor="filter-max-price">Max Price ($)</label>
+              <input id="filter-max-price" className="form-input" type="number" min={0} value={maxPrice}
                 onChange={e => setFilter('max_price', e.target.value)} placeholder="999" />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button className="btn btn-ghost btn-full" onClick={clearAll}>
+            <div>
+              <button type="button" className="btn btn-ghost w-full flex items-center justify-center gap-2" onClick={clearAll}>
                 <X size={14} /> Clear All
               </button>
             </div>
@@ -166,11 +158,13 @@ export default function CourseList() {
 
         {/* Active Filter Tags */}
         {activeFilters > 0 && (
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <div className="flex flex-wrap gap-2 mb-6">
             {level && <FilterTag label={`Level: ${level}`} onRemove={() => setFilter('level', '')} />}
             {language && <FilterTag label={`Lang: ${language}`} onRemove={() => setFilter('language', '')} />}
             {isFree === 'true' && <FilterTag label="Free" onRemove={() => setFilter('is_free', '')} />}
             {isFree === 'false' && <FilterTag label="Paid" onRemove={() => setFilter('is_free', '')} />}
+            {minPrice && <FilterTag label={`Min: $${minPrice}`} onRemove={() => setFilter('min_price', '')} />}
+            {maxPrice && <FilterTag label={`Max: $${maxPrice}`} onRemove={() => setFilter('max_price', '')} />}
           </div>
         )}
 
@@ -182,8 +176,10 @@ export default function CourseList() {
         ) : courses?.length === 0 ? (
           <EmptyState onClear={clearAll} />
         ) : (
-          <div className="grid-4">
-            {courses?.map(course => <CourseCard key={course.id} course={course} />)}
+          <div className="grid-4 animate-fade-in">
+            {courses?.map(course => (
+              <CourseCard key={course.id} course={course} />
+            ))}
           </div>
         )}
       </div>
@@ -193,15 +189,9 @@ export default function CourseList() {
 
 function FilterTag({ label, onRemove }) {
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-      padding: '4px 12px', borderRadius: 100,
-      background: 'var(--color-primary)20',
-      border: '1px solid var(--color-primary)40',
-      color: 'var(--color-primary)', fontSize: 12, fontWeight: 600,
-    }}>
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
       {label}
-      <button onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center' }}>
+      <button onClick={onRemove} className="text-primary hover:text-white focus:outline-none flex items-center">
         <X size={12} />
       </button>
     </span>
@@ -210,62 +200,37 @@ function FilterTag({ label, onRemove }) {
 
 function CourseCard({ course }) {
   return (
-    <Link to={`/courses/${course.slug ?? course.id}`} style={{ textDecoration: 'none' }}>
-      <div className="card-course" style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 16, overflow: 'hidden',
-        transition: 'all 0.2s', cursor: 'pointer',
-      }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.borderColor = 'var(--color-primary)'
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(108,99,255,0.2)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.borderColor = 'var(--color-border)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
-      >
-        <div style={{ position: 'relative' }}>
-          <img
-            src={course.thumbnail_url ?? `https://picsum.photos/seed/${course.id}/400/225`}
-            alt={course.title}
-            style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
-          />
-          {course.is_free && (
-            <span style={{
-              position: 'absolute', top: 10, right: 10,
-              background: '#10b981', color: '#fff',
-              padding: '3px 10px', borderRadius: 100,
-              fontSize: 11, fontWeight: 700,
-            }}>FREE</span>
-          )}
+    <Link to={`/courses/${course.slug ?? course.id}`} className="card-course">
+      <div className="relative">
+        <img
+          src={course.thumbnail_url ?? `https://picsum.photos/seed/${course.id}/400/225`}
+          alt={course.title}
+          className="card-course__thumbnail"
+        />
+        {course.is_free && (
+          <span className="absolute top-3 right-3 bg-secondary text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase">
+            FREE
+          </span>
+        )}
+      </div>
+      <div className="card-course__body">
+        <div className="card-course__tags">
+          <span className="card-course__tag">{course.level}</span>
+          <span className="text-xs text-gray-400 px-2 py-0.5 rounded bg-surface2">{course.language}</span>
         </div>
-        <div style={{ padding: '1rem' }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: '0.5rem' }}>
-            <span style={{
-              background: 'var(--color-primary)20', color: 'var(--color-primary)',
-              padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-            }}>{course.level}</span>
-            <span style={{
-              background: 'var(--color-border)', color: 'var(--color-text-muted)',
-              padding: '2px 8px', borderRadius: 6, fontSize: 11,
-            }}>{course.language}</span>
-          </div>
-          <div style={{ fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.4, marginBottom: '0.75rem', color: '#fff' }}>
-            {course.title}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--color-text-muted)', marginBottom: '0.75rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Clock size={12} /> {course.total_duration_minutes}min
-            </span>
-            <span>{course.total_lessons} lessons</span>
-          </div>
-          <div style={{ fontWeight: 800, fontSize: '1.1rem', color: course.is_free ? '#10b981' : '#fff' }}>
-            {course.is_free ? 'Free' : `$${Number(course.price).toFixed(2)}`}
-          </div>
+        <div className="card-course__title">
+          {course.title}
+        </div>
+        <div className="card-course__meta">
+          <span className="flex items-center gap-1"><Clock size={12} /> {course.total_duration_minutes}m</span>
+          <span>{course.total_lessons || 0} lessons</span>
+        </div>
+        <div className="card-course__price mt-auto pt-2">
+          {course.is_free ? (
+            <span className="text-secondary font-extrabold text-base">Free</span>
+          ) : (
+            `$${Number(course.price).toFixed(2)}`
+          )}
         </div>
       </div>
     </Link>
@@ -274,15 +239,12 @@ function CourseCard({ course }) {
 
 function SkeletonCard() {
   return (
-    <div style={{
-      background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-      borderRadius: 16, overflow: 'hidden', opacity: 0.6,
-    }}>
-      <div style={{ width: '100%', aspectRatio: '16/9', background: 'var(--color-border)', animation: 'pulse 1.5s infinite' }} />
-      <div style={{ padding: '1rem' }}>
-        <div style={{ height: 12, background: 'var(--color-border)', borderRadius: 4, marginBottom: 8 }} />
-        <div style={{ height: 16, background: 'var(--color-border)', borderRadius: 4, marginBottom: 8, width: '80%' }} />
-        <div style={{ height: 12, background: 'var(--color-border)', borderRadius: 4, width: '50%' }} />
+    <div className="bg-surface border border-border rounded-2xl overflow-hidden opacity-50 flex flex-col h-full">
+      <div className="w-full aspect-video bg-border animate-pulse" />
+      <div className="p-5 flex-grow">
+        <div className="h-3 bg-border rounded mb-3 w-1/3 animate-pulse" />
+        <div className="h-4 bg-border rounded mb-2 w-3/4 animate-pulse" />
+        <div className="h-3 bg-border rounded w-1/2 animate-pulse mt-4" />
       </div>
     </div>
   )
@@ -290,11 +252,11 @@ function SkeletonCard() {
 
 function EmptyState({ onClear }) {
   return (
-    <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔍</div>
-      <h2 style={{ marginBottom: '0.5rem' }}>No courses found</h2>
-      <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
-        Try a different search term or adjust your filters
+    <div className="text-center py-20 px-4">
+      <div className="text-5xl mb-4">🔍</div>
+      <h2 className="text-xl font-bold mb-2 text-white">No courses found</h2>
+      <p className="text-gray-400 mb-6 max-w-sm mx-auto">
+        Try a different search term or adjust your filters to view courses.
       </p>
       <button className="btn btn-primary" onClick={onClear}>Clear Filters</button>
     </div>

@@ -64,3 +64,63 @@ api.interceptors.response.use(
 )
 
 export default api
+
+// ─── Typed API helpers ────────────────────────────────────────────────────────
+
+/** Returns the pre-signed stream URL for a lesson */
+export const getStreamUrl = (lessonId) =>
+  api.get(`/lessons/${lessonId}/stream`).then((r) => r.data)
+
+/** Mark a lesson complete and update progress */
+export const postProgress = (courseId, lessonId) =>
+  api.post(`/enrollments/${courseId}/progress`, { lesson_id: lessonId }).then((r) => r.data)
+
+/** Fetch Q&A messages for a course */
+export const getQAMessages = (courseId) =>
+  api.get(`/qa/${courseId}/messages`).then((r) => r.data)
+
+/** Post a new Q&A message */
+export const postQAMessage = (courseId, body) =>
+  api.post(`/qa/${courseId}/messages`, { body }).then((r) => r.data)
+
+/** Start Stripe checkout — returns { checkout_url } */
+export const createCheckout = (courseId) =>
+  api
+    .post('/payments/checkout', {
+      course_id: courseId,
+      success_url: `${window.location.origin}/checkout/${courseId}?status=success`,
+      cancel_url: `${window.location.origin}/checkout/${courseId}?status=cancelled`,
+    })
+    .then((r) => r.data)
+
+/** Direct free-course enrollment */
+export const enrollFree = (courseId) =>
+  api.post(`/enrollments/${courseId}`).then((r) => r.data)
+
+// ─── Quiz helpers ─────────────────────────────────────────────────────────────
+
+/** Get the quiz attached to a lesson (404 if none) */
+export const getQuizForLesson = (lessonId) =>
+  api.get(`/lessons/${lessonId}/quiz`).then((r) => r.data)
+
+/** Get quiz questions (without correct answers) */
+export const getQuizQuestions = (quizId) =>
+  api.get(`/quizzes/${quizId}/questions`).then((r) => r.data)
+
+/** Submit answers for grading — returns QuizResult */
+export const submitQuiz = (quizId, answers) =>
+  api.post(`/quizzes/${quizId}/submit`, { answers }).then((r) => r.data)
+
+/** Get student's past attempts on a quiz */
+export const getQuizAttempts = (quizId) =>
+  api.get(`/quizzes/${quizId}/attempts`).then((r) => r.data)
+
+// ─── Certificate helpers ──────────────────────────────────────────────────────
+
+/** Generate (or re-fetch) a certificate for a completed course */
+export const generateCertificate = (courseId) =>
+  api.post(`/certificates/${courseId}`).then((r) => r.data)
+
+/** Public verify endpoint (no auth) */
+export const verifyCertificate = (certId) =>
+  api.get(`/certificates/verify/${certId}`).then((r) => r.data)

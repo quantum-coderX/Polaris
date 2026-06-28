@@ -4,14 +4,27 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
 import api from '../services/api'
 import {
-  Clock, Star, Users, ChevronDown, ChevronUp,
+  Clock, Star, ChevronDown, ChevronUp,
   PlayCircle, FileText, Lock, CheckCircle, ShoppingCart, BookOpen
 } from 'lucide-react'
+
+/** Parses a value that may be a JSON array string ["a","b"] or a plain newline-separated string */
+const parseJsonOrSplit = (value) => {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : [value]
+  } catch {
+    return value.split('\n').filter(Boolean)
+  }
+}
+
 
 export default function CourseDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
   const [expandedModules, setExpandedModules] = useState(new Set([0]))
   const [enrolling, setEnrolling] = useState(false)
 
@@ -28,7 +41,7 @@ export default function CourseDetail() {
 
   const { data: reviews } = useQuery({
     queryKey: ['reviews', course?.id],
-    queryFn: () => api.get(`/reviews/${course.id}`).then(r => r.data),
+    queryFn: () => api.get(`/reviews/course/${course.id}`).then(r => r.data).catch(() => []),
     enabled: !!course?.id,
   })
 
@@ -75,86 +88,82 @@ export default function CourseDetail() {
   if (isLoading) return <LoadingScreen />
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div className="min-h-screen bg-bg">
       {/* Hero */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0d0d1a 100%)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '4rem 0',
-      }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '3rem', alignItems: 'start' }}>
-          {/* Left */}
-          <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
-              <span style={{ background: 'var(--color-primary)20', color: 'var(--color-primary)', padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+      <div className="bg-gradient-to-br from-surface2 via-[#16213e] to-bg border-b border-border py-12 md:py-16">
+        <div className="container grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left info column */}
+          <div className="lg:col-span-2">
+            <div className="flex gap-2 mb-4">
+              <span className="badge badge-primary">
                 {course?.level}
               </span>
-              <span style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)', padding: '4px 12px', borderRadius: 6, fontSize: 12 }}>
+              <span className="badge bg-surface2 text-gray-400">
                 {course?.language}
               </span>
             </div>
-            <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', lineHeight: 1.2, marginBottom: '1rem' }}>
+            <h1 className="text-2xl md:text-4xl font-heading mb-4 text-white leading-tight">
               {course?.title}
             </h1>
-            <p className="text-muted" style={{ fontSize: '1.05rem', marginBottom: '1.5rem', lineHeight: 1.7 }}>
+            <p className="text-gray-400 mb-6 leading-relaxed text-base md:text-lg">
               {course?.short_description}
             </p>
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div className="flex flex-wrap gap-6 mt-6">
               <Stat icon={<Clock size={16} />} value={`${course?.total_duration_minutes} min`} label="Total Duration" />
               <Stat icon={<BookOpen size={16} />} value={`${course?.total_lessons} lessons`} label="Lessons" />
-              {avgRating && <Stat icon={<Star size={16} color="#f59e0b" fill="#f59e0b" />} value={avgRating} label={`${reviews.length} reviews`} />}
+              {avgRating && <Stat icon={<Star size={16} className="text-gold fill-current" />} value={avgRating} label={`${reviews.length} reviews`} />}
             </div>
           </div>
 
-          {/* Enroll card */}
-          <div style={{
-            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 20, padding: '1.5rem', position: 'sticky', top: '5rem',
-          }}>
-            <img
-              src={course?.thumbnail_url ?? `https://picsum.photos/seed/${course?.id}/400/225`}
-              alt={course?.title}
-              style={{ width: '100%', borderRadius: 12, marginBottom: '1rem', objectFit: 'cover', aspectRatio: '16/9' }}
-            />
-            <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>
-              {course?.is_free ? <span style={{ color: '#10b981' }}>Free</span> : `$${Number(course?.price).toFixed(2)}`}
-            </div>
+          {/* Right sticky checkout column */}
+          <div className="lg:col-span-1 w-full lg:sticky lg:top-24">
+            <div className="bg-surface border border-border rounded-2xl p-6 shadow-glow">
+              <img
+                src={course?.thumbnail_url ?? `https://picsum.photos/seed/${course?.id}/400/225`}
+                alt={course?.title}
+                className="w-full rounded-xl mb-4 object-cover aspect-video"
+              />
+              <div className="text-3xl font-heading font-extrabold mb-4 text-white">
+                {course?.is_free ? <span className="text-secondary">Free</span> : `$${Number(course?.price).toFixed(2)}`}
+              </div>
 
-            {enrollment ? (
-              <Link to={`/learn/${course?.id}`} className="btn btn-primary btn-full btn-lg">
-                <PlayCircle size={18} /> Continue Learning
-              </Link>
-            ) : (
-              <button
-                id="enroll-btn"
-                className="btn btn-primary btn-full btn-lg"
-                onClick={handleEnroll}
-                disabled={enrolling}
-              >
-                {enrolling ? 'Processing...' : course?.is_free ? (
-                  <><BookOpen size={18} /> Enroll Free</>
-                ) : (
-                  <><ShoppingCart size={18} /> Buy Now</>
-                )}
-              </button>
-            )}
-            <p className="text-muted" style={{ textAlign: 'center', fontSize: 12, marginTop: '0.75rem' }}>
-              30-day money-back guarantee
-            </p>
+              {enrollment ? (
+                <Link to={`/learn/${course?.id}`} className="btn btn-primary btn-full btn-lg">
+                  <PlayCircle size={18} /> Continue Learning
+                </Link>
+              ) : (
+                <button
+                  id="enroll-btn"
+                  className="btn btn-primary btn-full btn-lg"
+                  onClick={handleEnroll}
+                  disabled={enrolling}
+                >
+                  {enrolling ? 'Processing...' : course?.is_free ? (
+                    <><BookOpen size={18} /> Enroll Free</>
+                  ) : (
+                    <><ShoppingCart size={18} /> Buy Now</>
+                  )}
+                </button>
+              )}
+              <p className="text-gray-400 text-center text-xs mt-3">
+                30-day money-back guarantee
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="container" style={{ padding: '3rem 1rem', display: 'grid', gridTemplateColumns: '1fr 360px', gap: '3rem' }}>
-        <div>
+      {/* Body Grid */}
+      <div className="container py-12 px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content Area */}
+        <div className="lg:col-span-2">
           {/* What you'll learn */}
           {course?.what_you_learn && (
             <Section title="What You'll Learn">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                {course.what_you_learn.split('\n').filter(Boolean).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '0.9rem' }}>
-                    <CheckCircle size={14} color="#10b981" style={{ marginTop: 3, flexShrink: 0 }} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {parseJsonOrSplit(course.what_you_learn).map((item, i) => (
+                  <div key={i} className="flex gap-2.5 items-start text-sm md:text-base">
+                    <CheckCircle size={14} className="text-secondary mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -162,60 +171,54 @@ export default function CourseDetail() {
             </Section>
           )}
 
-          {/* Curriculum */}
+          {/* Curriculum Accordion */}
           <Section title="Course Curriculum">
-            {modules?.map((mod, idx) => (
-              <div key={mod.id} style={{ border: '1px solid var(--color-border)', borderRadius: 12, marginBottom: '0.75rem', overflow: 'hidden' }}>
-                <button
-                  onClick={() => toggleModule(idx)}
-                  style={{
-                    width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '1rem 1.25rem', background: 'var(--color-surface)', border: 'none', cursor: 'pointer', color: '#fff',
-                  }}
-                >
-                  <span style={{ fontWeight: 600 }}>{mod.title}</span>
-                  {expandedModules.has(idx) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-                {expandedModules.has(idx) && mod.lessons?.map(lesson => (
-                  <div key={lesson.id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '0.75rem 1.25rem', borderTop: '1px solid var(--color-border)',
-                    background: 'var(--color-bg)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {lesson.lesson_type === 'video'
-                        ? <PlayCircle size={14} color="var(--color-primary)" />
-                        : <FileText size={14} color="var(--color-text-muted)" />}
-                      <span style={{ fontSize: '0.875rem' }}>{lesson.title}</span>
-                      {lesson.is_preview && <span style={{ fontSize: 10, color: '#10b981', fontWeight: 600 }}>Preview</span>}
+            {!modules?.length ? (
+              <p className="text-gray-400">No lessons uploaded yet.</p>
+            ) : (
+              modules.map((mod, idx) => (
+                <div key={mod.id} className="border border-border rounded-xl mb-3 overflow-hidden bg-surface">
+                  <button
+                    onClick={() => toggleModule(idx)}
+                    className="w-full flex justify-between items-center p-4 hover:bg-surface2 text-left text-white border-0 transition-colors focus:outline-none"
+                  >
+                    <span className="fontWeight-600 font-bold">{mod.title}</span>
+                    {expandedModules.has(idx) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {expandedModules.has(idx) && mod.lessons?.map(lesson => (
+                    <div key={lesson.id} className="flex justify-between items-center p-3.5 border-t border-border bg-bg/50 hover:bg-bg transition-colors">
+                      <div className="flex items-center gap-2">
+                        {lesson.lesson_type === 'video'
+                          ? <PlayCircle size={14} className="text-primary" />
+                          : <FileText size={14} className="text-gray-400" />}
+                        <span className="text-sm">{lesson.title}</span>
+                        {lesson.is_preview && <span className="text-[10px] text-secondary font-bold uppercase ml-2 bg-secondary/15 px-1.5 py-0.5 rounded">Preview</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{lesson.duration_minutes}m</span>
+                        {!enrollment && !lesson.is_preview && <Lock size={12} className="text-gray-500" />}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{lesson.duration_minutes}min</span>
-                      {!enrollment && !lesson.is_preview && <Lock size={12} color="var(--color-text-muted)" />}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </div>
+              ))
+            )}
           </Section>
 
-          {/* Reviews */}
+          {/* Reviews List */}
           {reviews?.length > 0 && (
             <Section title={`Student Reviews (${reviews.length})`}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="flex flex-col gap-4">
                 {reviews.slice(0, 5).map(review => (
-                  <div key={review.id} style={{
-                    padding: '1rem', borderRadius: 12,
-                    background: 'var(--color-surface)', border: '1px solid var(--color-border)'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <div style={{ display: 'flex', gap: 2 }}>
+                  <div key={review.id} className="p-5 rounded-xl bg-surface border border-border">
+                    <div className="flex justify-between mb-2">
+                      <div className="flex gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={14} fill={i < review.rating ? '#f59e0b' : 'transparent'} color="#f59e0b" />
+                          <Star key={i} size={14} className={i < review.rating ? 'text-gold fill-current' : 'text-gray-600'} />
                         ))}
                       </div>
                     </div>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{review.body}</p>
+                    <p className="text-sm leading-relaxed text-gray-300">{review.body}</p>
                   </div>
                 ))}
               </div>
@@ -223,20 +226,19 @@ export default function CourseDetail() {
           )}
         </div>
 
-        {/* Requirements sidebar */}
-        <div>
+        {/* Sidebar Requirements */}
+        <div className="lg:col-span-1">
           {course?.requirements && (
-            <div style={{
-              background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 16, padding: '1.5rem', marginBottom: '1rem',
-            }}>
-              <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Requirements</h3>
-              {course.requirements.split('\n').filter(Boolean).map((req, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                  <span style={{ color: 'var(--color-primary)', marginTop: 3 }}>•</span>
-                  <span className="text-muted">{req}</span>
-                </div>
-              ))}
+            <div className="bg-surface border border-border rounded-2xl p-6">
+              <h3 className="mb-4 text-base font-bold text-white">Requirements</h3>
+              <div className="flex flex-col gap-2">
+                {parseJsonOrSplit(course.requirements).map((req, i) => (
+                  <div key={i} className="flex gap-2 text-sm">
+                    <span className="text-primary font-bold">•</span>
+                    <span className="text-gray-400">{req}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -247,11 +249,11 @@ export default function CourseDetail() {
 
 function Stat({ icon, value, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ color: 'var(--color-primary)' }}>{icon}</span>
+    <div className="flex items-center gap-3">
+      <span className="text-primary">{icon}</span>
       <div>
-        <div style={{ fontWeight: 700 }}>{value}</div>
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{label}</div>
+        <div className="font-bold text-white">{value}</div>
+        <div className="text-xs text-gray-400">{label}</div>
       </div>
     </div>
   )
@@ -259,8 +261,8 @@ function Stat({ icon, value, label }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: '2.5rem' }}>
-      <h2 style={{ fontSize: '1.35rem', marginBottom: '1.25rem' }}>{title}</h2>
+    <div className="mb-10">
+      <h2 className="text-xl font-heading mb-4 text-white border-b border-border/50 pb-2">{title}</h2>
       {children}
     </div>
   )
@@ -268,7 +270,7 @@ function Section({ title, children }) {
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="min-h-[60vh] flex items-center justify-center">
       <div className="spinner" />
     </div>
   )

@@ -74,9 +74,26 @@ async def create_course(
     return course
 
 
+@router.get("/mine", response_model=list[CourseOut])
+async def my_courses(
+    current_user: User = Depends(require_mentor),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all courses created by the currently authenticated mentor."""
+    result = await db.execute(
+        select(Course).where(Course.mentor_id == current_user.id).order_by(Course.id.desc())
+    )
+    return result.scalars().all()
+
+
 @router.get("/{course_id}", response_model=CourseOut)
-async def get_course(course_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Course).where(Course.id == course_id))
+async def get_course(course_id: str, db: AsyncSession = Depends(get_db)):
+    """Look up a course by numeric ID or by URL slug."""
+    # Try numeric ID first
+    if course_id.isdigit():
+        result = await db.execute(select(Course).where(Course.id == int(course_id)))
+    else:
+        result = await db.execute(select(Course).where(Course.slug == course_id))
     course = result.scalar_one_or_none()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -164,6 +181,8 @@ async def delete_course(
     db.add(course)
 
 
+from sqlalchemy.orm import selectinload
+
 # ---- Modules ---------------------------------------------------------------
 
 @router.post("/{course_id}/modules", response_model=ModuleOut, status_code=201)
@@ -180,11 +199,20 @@ async def create_module(
     module = Module(course_id=course_id, **body.model_dump())
     db.add(module)
     await db.flush()
-    await db.refresh(module)
-    return module
+    res = await db.execute(
+        select(Module)
+        .where(Module.id == module.id)
+        .options(selectinload(Module.lessons))
+    )
+    return res.scalar_one()
 
 
 @router.get("/{course_id}/modules", response_model=list[ModuleOut])
 async def list_modules(course_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Module).where(Module.course_id == course_id).order_by(Module.order))
+    result = await db.execute(
+        select(Module)
+        .where(Module.course_id == course_id)
+        .options(selectinload(Module.lessons))
+        .order_by(Module.order)
+    )
     return result.scalars().all()

@@ -4,11 +4,11 @@ services:
   # ── PostgreSQL ────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: learnhub_postgres
+    container_name: Polaris_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: learnhub
+      POSTGRES_DB: Polaris
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -24,10 +24,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: learnhub_backend
+    container_name: Polaris_backend
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/learnhub
+      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
     ports:
       - "8000:8000"
     depends_on:
@@ -42,7 +42,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: learnhub_frontend
+    container_name: Polaris_frontend
     ports:
       - "5173:5173"
     volumes:

@@ -1,4 +1,4 @@
-# 🎓 LearnHub — Online Learning Platform
+# 🎓 Polaris — Online Learning Platform
 
 > A production-grade, cloud-native e-learning platform built with **FastAPI** + **React** + **PostgreSQL** — designed for rapid development with zero external infrastructure dependencies.
 >
@@ -101,7 +101,7 @@ docker-compose up -d
 ### 3. Run Migrations
 
 ```bash
-docker exec learnhub_backend alembic upgrade head
+docker exec Polaris_backend alembic upgrade head
 ```
 
 ### 4. Frontend (standalone)
@@ -212,9 +212,9 @@ Client A sends message:
 | Week | Focus | Status |
 |------|-------|--------|
 | **1** | Foundation — FastAPI, DB models, JWT auth, React scaffold | ✅ Complete |
-| **2** | Courses, Lessons (S3 streaming), Enrollments, Stripe checkout | 🔜 Next |
-| **3** | Q&A WebSocket rooms, Postgres FTS search, Reviews, Notifications | 🔜 |
-| **4** | Quiz engine, multi-stage Docker, Railway/Render deploy, tests | 🔜 |
+| **2** | Courses, Lessons (S3 streaming), Enrollments, Stripe checkout | ✅ Complete |
+| **3** | Q&A WebSocket rooms, Postgres FTS search, Reviews, Notifications | ✅ Complete |
+| **4** | Quiz engine, Certificates, Admin user management, Docker, tests | ✅ Complete |
 
 ---
 

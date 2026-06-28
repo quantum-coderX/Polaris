@@ -7,13 +7,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # App
-    APP_NAME: str = "LearnHub API"
+    APP_NAME: str = "Polaris API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production"
 
     # Database (async)
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/learnhub"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/Polaris"
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # AWS S3
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
-    AWS_S3_BUCKET: str = "learnhub-media"
+    AWS_S3_BUCKET: str = "Polaris-media"
     AWS_REGION: str = "ap-south-1"
 
     # Stripe (sandbox)
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
     # 2FA / TOTP
-    TOTP_ISSUER: str = "LearnHub"
+    TOTP_ISSUER: str = "Polaris"
 
     # Rate limiting (requests per minute)
     RATE_LIMIT_LOGIN: str = "5/minute"
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAILS_FROM: str = "noreply@learnhub.io"
+    EMAILS_FROM: str = "noreply@Polaris.io"
 
     # Frontend URL (used in certificate verification links)
     FRONTEND_URL: str = "http://localhost:5173"

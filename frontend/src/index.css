@@ -1,9 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Google Fonts ─────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+/* ── Custom Theme Variables ────────────────────────────────────────────────── */
+:root {
+  --color-bg: #0d0d1a;
+  --color-surface: #13132a;
+  --color-surface-2: #1a1a35;
+  --color-border: #2a2a4a;
+  --color-primary: #7c5cfc;
+  --color-secondary: #00d4c8;
+  --color-accent: #ff6b6b;
+  --color-gold: #fbbf24;
+  --color-text-muted: #9ca3af;
+  --font-heading: 'Outfit', sans-serif;
+  --gradient-hero: linear-gradient(135deg, #7c5cfc 0%, #00d4c8 100%);
+  --gradient-card: linear-gradient(145deg, #1a1a35 0%, #13132a 100%);
+  --radius-md: 0.75rem;
+}
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 @layer base {
@@ -12,6 +28,7 @@
   body {
     @apply bg-bg text-white font-sans antialiased;
     line-height: 1.6;
+    background-color: var(--color-bg);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -29,11 +46,27 @@
 /* ── Component Layer ───────────────────────────────────────────────────────── */
 @layer components {
 
+  /* ── Layouts ──────────────────────────────────────────────────────────── */
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+  }
+
+  /* Responsive Grids */
+  .grid-2 {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+  }
+  .grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  .grid-4 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
   /* ── Buttons ──────────────────────────────────────────────────────────── */
   .btn {
     @apply inline-flex items-center justify-center gap-2
            px-6 py-2.5 rounded-xl font-semibold text-sm
-           border-0 cursor-pointer whitespace-nowrap
+           border border-transparent cursor-pointer whitespace-nowrap
            transition-all duration-200;
   }
 
@@ -48,8 +81,7 @@
   }
 
   .btn-ghost {
-    @apply bg-transparent text-gray-400 border border-transparent;
-    &:hover { @apply bg-surface2 text-white; }
+    @apply bg-transparent text-gray-400 hover:text-white hover:bg-surface2;
   }
 
   .btn-danger {
@@ -66,13 +98,44 @@
   .card {
     @apply bg-gradient-card border border-border rounded-2xl p-6
            transition-all duration-200;
-    &:hover { @apply border-primary shadow-glow; }
+    &:hover { @apply border-primary/50 shadow-glow; }
   }
 
-  .course-card {
-    @apply bg-gradient-card border border-border rounded-2xl overflow-hidden
-           transition-all duration-200 cursor-pointer;
-    &:hover { @apply -translate-y-1 border-primary shadow-glow; }
+  /* Course Card */
+  .card-course {
+    @apply bg-surface border border-border rounded-2xl overflow-hidden
+           transition-all duration-300 cursor-pointer flex flex-col h-full;
+    &:hover {
+      @apply -translate-y-1 border-primary shadow-glow;
+    }
+  }
+
+  .card-course__thumbnail {
+    @apply w-full aspect-video object-cover;
+  }
+
+  .card-course__body {
+    @apply p-5 flex flex-col flex-grow;
+  }
+
+  .card-course__tags {
+    @apply flex gap-2 mb-3;
+  }
+
+  .card-course__tag {
+    @apply text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-primary/10 text-primary;
+  }
+
+  .card-course__title {
+    @apply font-heading font-bold text-base text-white mb-2 line-clamp-2 leading-snug;
+  }
+
+  .card-course__meta {
+    @apply flex items-center gap-4 text-xs text-gray-400 mb-4 mt-auto;
+  }
+
+  .card-course__price {
+    @apply text-lg font-heading font-extrabold text-white;
   }
 
   /* ── Form elements ────────────────────────────────────────────────────── */
@@ -104,7 +167,7 @@
   .progress-bar {
     @apply w-full h-1.5 bg-border rounded-full overflow-hidden;
   }
-  .progress-fill {
+  .progress-fill, .progress-bar__fill {
     @apply h-full bg-gradient-hero rounded-full transition-all duration-500;
   }
 
@@ -112,18 +175,41 @@
   .stat-card {
     @apply bg-gradient-card border border-border rounded-2xl p-5;
   }
-  .stat-label { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider; }
-  .stat-value { @apply text-3xl font-heading font-extrabold mt-1; }
+  .stat-label, .stat-card__label { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider; }
+  .stat-value, .stat-card__value { @apply text-3xl font-heading font-extrabold mt-1 text-white; }
 
   /* ── Navbar ───────────────────────────────────────────────────────────── */
   .navbar {
     @apply sticky top-0 z-50 border-b border-border py-4
-           backdrop-blur-xl;
+           backdrop-blur-xl w-full;
     background: rgba(13, 13, 26, 0.85);
   }
 
+  .navbar__inner {
+    @apply flex items-center justify-between;
+  }
+
+  .navbar__logo {
+    @apply font-heading font-extrabold text-xl tracking-wider bg-gradient-hero bg-clip-text text-transparent;
+  }
+
+  .navbar__links {
+    @apply flex items-center gap-6;
+  }
+
+  .navbar__link {
+    @apply text-sm font-medium text-gray-400 hover:text-white transition-colors py-1;
+    &.active {
+      @apply text-primary border-b-2 border-primary;
+    }
+  }
+
   /* ── Sidebar ──────────────────────────────────────────────────────────── */
-  .sidebar-item {
+  .sidebar {
+    @apply w-64 border-r border-border p-6 flex flex-col gap-6 bg-surface shrink-0 transition-transform duration-300;
+  }
+
+  .sidebar-item, .sidebar__item {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-xl
            text-sm font-medium text-gray-400 cursor-pointer w-full
            border-0 bg-transparent text-left
@@ -150,9 +236,682 @@
   .gradient-text {
     @apply bg-gradient-hero bg-clip-text text-transparent;
   }
+
+  /* ── Hero Section ─────────────────────────────────────────────────────── */
+  .hero {
+    @apply py-16 md:py-24 text-center relative overflow-hidden;
+    background: linear-gradient(135deg, #13132a 0%, #0d0d1a 100%);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .hero__eyebrow {
+    @apply inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-6;
+  }
+  .hero__title {
+    @apply text-4xl md:text-6xl font-heading font-extrabold mb-6 tracking-tight leading-tight text-white;
+    span {
+      @apply bg-gradient-hero bg-clip-text text-transparent;
+    }
+  }
+  .hero__subtitle {
+    @apply text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed;
+  }
+  .hero__actions {
+    @apply flex flex-col sm:flex-row gap-4 justify-center items-center;
+  }
+
+  /* Section headers */
+  .section {
+    @apply py-16 border-b border-border last:border-b-0;
+  }
+  .section__header {
+    @apply text-center max-w-2xl mx-auto mb-12;
+    h2 {
+      @apply text-3xl font-heading font-extrabold mb-4 text-white;
+    }
+    p {
+      @apply text-gray-400 text-lg;
+    }
+  }
 }
 
 /* ── Utilities ─────────────────────────────────────────────────────────────── */
 @layer utilities {
   .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+  .animate-fadein { animation: fadeIn 0.4s ease forwards; }
 }
+
+/* ── Learn Page ─────────────────────────────────────────────────────────────── */
+.learn-root {
+  @apply flex flex-col h-screen overflow-hidden bg-bg text-white;
+}
+
+.learn-topbar {
+  @apply flex items-center justify-between px-4 py-2 bg-surface border-b border-border shrink-0 z-20;
+  min-height: 52px;
+}
+
+.learn-topbar-left {
+  @apply flex items-center gap-3 flex-1 min-w-0;
+}
+
+.learn-topbar-center {
+  @apply flex-1 text-center;
+}
+
+.learn-topbar-right {
+  @apply flex items-center gap-2 flex-1 justify-end;
+}
+
+.learn-icon-btn {
+  @apply p-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface2 border-0 bg-transparent cursor-pointer transition-colors;
+  &:disabled { @apply opacity-30 cursor-not-allowed; }
+}
+
+.learn-back-link {
+  @apply flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors truncate;
+}
+
+.learn-body {
+  @apply flex flex-1 overflow-hidden;
+}
+
+.learn-sidebar {
+  @apply flex flex-col border-r border-border bg-surface shrink-0 overflow-y-auto transition-all duration-300;
+  width: 280px;
+}
+
+.learn-sidebar--closed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+.learn-sidebar--open {
+  width: 280px;
+}
+
+.learn-sidebar-header {
+  @apply flex items-center gap-2 px-4 py-3 border-b border-border shrink-0;
+}
+
+.learn-sidebar-progress {
+  @apply h-1 w-full bg-border shrink-0;
+}
+
+.learn-sidebar-progress-fill {
+  @apply h-full bg-gradient-hero transition-all duration-500;
+}
+
+.learn-sidebar-nav {
+  @apply flex-1 overflow-y-auto py-2;
+}
+
+.learn-module-btn {
+  @apply w-full flex items-center justify-between gap-2 px-4 py-3
+         bg-transparent border-0 cursor-pointer text-gray-400 hover:bg-surface2 hover:text-white
+         transition-colors text-left;
+}
+
+.learn-lesson-btn {
+  @apply w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400
+         bg-transparent border-0 cursor-pointer hover:bg-surface2 hover:text-white
+         transition-colors text-left;
+  &:disabled { @apply opacity-40 cursor-not-allowed; }
+}
+
+.learn-lesson-btn--active {
+  @apply bg-primary/10 text-primary;
+  &:hover { @apply bg-primary/15 text-primary; }
+}
+
+.learn-lesson-btn--locked {
+  @apply text-gray-600;
+}
+
+.learn-lesson-icon {
+  @apply w-4 h-4 flex items-center justify-center shrink-0;
+}
+
+.learn-main {
+  @apply flex-1 overflow-y-auto flex flex-col;
+}
+
+.learn-lesson-header {
+  @apply px-6 py-4 border-b border-border;
+}
+
+.learn-lesson-title {
+  @apply text-lg font-bold text-white;
+}
+
+.learn-lesson-desc {
+  @apply text-gray-400 text-sm mt-1;
+}
+
+.learn-tabs {
+  @apply flex border-b border-border px-6;
+}
+
+.learn-tab-btn {
+  @apply flex items-center gap-2 px-5 py-3 text-sm font-semibold text-gray-400
+         border-b-2 border-transparent bg-transparent cursor-pointer
+         hover:text-white transition-colors;
+}
+
+.learn-tab-btn--active {
+  @apply text-primary border-primary;
+}
+
+.learn-tab-content {
+  @apply flex-1 overflow-y-auto p-6;
+}
+
+/* ── Video Player ────────────────────────────────────────────────────────────── */
+.video-wrapper {
+  @apply relative w-full bg-black;
+  aspect-ratio: 16/9;
+}
+
+.learn-video {
+  @apply w-full h-full block transition-opacity duration-300;
+}
+
+.video-loading {
+  @apply absolute inset-0 flex items-center justify-center bg-black/60 z-10;
+}
+
+.video-placeholder {
+  @apply w-full flex flex-col items-center justify-center bg-black/40;
+  aspect-ratio: 16/9;
+}
+
+/* ── Q&A Panel ───────────────────────────────────────────────────────────────── */
+.qa-panel {
+  @apply flex flex-col gap-4 h-full;
+  min-height: 300px;
+}
+
+.qa-messages {
+  @apply flex-1 overflow-y-auto flex flex-col gap-4 min-h-[200px];
+}
+
+.qa-message {
+  @apply flex gap-3 items-start;
+}
+
+.qa-avatar {
+  @apply w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center text-white text-sm font-bold shrink-0;
+}
+
+.qa-message-body {
+  @apply flex-1;
+}
+
+.qa-message-meta {
+  @apply flex items-center gap-2 mb-1;
+}
+
+.qa-author {
+  @apply text-sm font-semibold text-white;
+}
+
+.qa-time {
+  @apply text-xs text-gray-500;
+}
+
+.qa-text {
+  @apply text-sm text-gray-300 leading-relaxed;
+}
+
+.qa-composer {
+  @apply flex gap-3 items-end border-t border-border pt-4;
+}
+
+.qa-input {
+  @apply flex-1 px-4 py-2.5 bg-surface2 border border-border rounded-xl
+         text-white text-sm placeholder-gray-500 outline-none resize-none
+         transition-all duration-200;
+  &:focus { @apply border-primary ring-2 ring-primary/20; }
+}
+
+/* ── Notes Panel ─────────────────────────────────────────────────────────────── */
+.notes-panel {
+  @apply flex flex-col gap-3;
+}
+
+.notes-header {
+  @apply flex items-center gap-2;
+}
+
+.notes-textarea {
+  @apply w-full px-4 py-3 bg-surface2 border border-border rounded-xl
+         text-white text-sm placeholder-gray-500 outline-none resize-y
+         transition-all duration-200;
+  min-height: 200px;
+  &:focus { @apply border-primary ring-2 ring-primary/20; }
+}
+
+.notes-footer {
+  @apply flex items-center justify-between;
+}
+
+/* ── Checkout Page ───────────────────────────────────────────────────────────── */
+.checkout-root {
+  @apply max-w-5xl mx-auto px-4 py-8;
+}
+
+.checkout-back {
+  @apply inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white
+         transition-colors mb-6;
+}
+
+.checkout-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+.checkout-summary-col,
+.checkout-payment-col {
+  @apply flex flex-col gap-4;
+}
+
+.checkout-card {
+  @apply bg-gradient-card border border-border rounded-2xl p-6;
+}
+
+.checkout-section-title {
+  @apply text-lg font-bold text-white mb-5;
+}
+
+.checkout-course-row {
+  @apply flex gap-4 items-start mb-5;
+}
+
+.checkout-thumbnail {
+  @apply w-28 h-16 object-cover rounded-lg shrink-0;
+}
+
+.checkout-course-info {
+  @apply flex-1 min-w-0;
+}
+
+.checkout-course-title {
+  @apply font-semibold text-white text-sm leading-snug mb-2;
+}
+
+.checkout-course-meta {
+  @apply flex flex-wrap gap-2;
+}
+
+.checkout-price-breakdown {
+  @apply space-y-3 bg-surface2 rounded-xl p-4;
+}
+
+.checkout-price-row {
+  @apply flex items-center justify-between text-sm;
+}
+
+.checkout-price-divider {
+  @apply border-t border-border;
+}
+
+.checkout-price-total {
+  @apply text-base font-semibold;
+}
+
+.checkout-guarantees {
+  @apply mt-5 space-y-2 list-none p-0;
+  li { @apply flex items-center gap-2 text-xs text-gray-400; }
+}
+
+.checkout-error {
+  @apply flex items-center gap-2 p-3 bg-accent/10 border border-accent/30 rounded-xl text-accent text-sm mb-4;
+}
+
+.checkout-free-section {
+  @apply flex flex-col items-center gap-4;
+}
+
+.checkout-free-badge {
+  @apply flex items-center gap-3 text-secondary font-bold text-lg;
+}
+
+.checkout-paid-section {
+  @apply flex flex-col gap-4;
+}
+
+.checkout-stripe-badge {
+  @apply flex items-center justify-center gap-2 text-xs text-gray-400 bg-surface2 rounded-xl py-2 px-4;
+}
+
+.checkout-card-logos {
+  @apply flex justify-center gap-2;
+}
+
+.checkout-card-chip {
+  @apply px-3 py-1.5 bg-surface2 border border-border rounded-lg text-xs font-bold text-gray-400;
+}
+
+.checkout-status-screen {
+  @apply min-h-[70vh] flex items-center justify-center p-4;
+}
+
+.checkout-status-card {
+  @apply max-w-md w-full text-center p-8 rounded-2xl border;
+}
+
+.checkout-status-card--success {
+  @apply bg-secondary/5 border-secondary/20;
+}
+
+.checkout-status-card--cancelled {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.checkout-status-icon {
+  @apply mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center;
+}
+
+.checkout-status-icon--success {
+  @apply bg-secondary/15 text-secondary;
+}
+
+.checkout-status-icon--cancelled {
+  @apply bg-accent/15 text-accent;
+}
+
+.checkout-status-title {
+  @apply text-2xl font-heading font-bold text-white mb-3;
+}
+
+.checkout-status-msg {
+  @apply text-gray-400 mb-5 leading-relaxed;
+}
+
+/* Flex utility for inline items  */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-1 { gap: 0.25rem; }
+.text-xs { font-size: 0.75rem; }
+.text-gray-400 { color: #9ca3af; }
+
+/* ── Quiz Panel ──────────────────────────────────────────────────────────────── */
+.quiz-panel {
+  @apply flex flex-col gap-4;
+}
+
+.quiz-empty {
+  @apply flex flex-col items-center justify-center py-16;
+}
+
+.quiz-header {
+  @apply flex items-start justify-between gap-4 pb-3 border-b border-border;
+}
+
+.quiz-questions {
+  @apply flex flex-col gap-4;
+}
+
+.quiz-question {
+  @apply bg-surface border border-border rounded-xl p-5 transition-all duration-200;
+}
+.quiz-question:hover {
+  @apply border-primary/30;
+}
+
+.quiz-question-header {
+  @apply flex items-center gap-2 mb-2;
+}
+
+.quiz-question-num {
+  @apply text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md;
+}
+
+.quiz-question-type {
+  @apply text-[10px] uppercase tracking-wider text-gray-500 font-semibold;
+}
+
+.quiz-question-text {
+  @apply text-sm text-gray-200 mb-3 leading-relaxed;
+}
+
+.quiz-options {
+  @apply flex flex-col gap-2;
+}
+
+.quiz-options--row {
+  @apply flex-row gap-3;
+}
+
+.quiz-option {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-surface2
+         cursor-pointer transition-all duration-200 text-sm text-gray-300;
+}
+.quiz-option:hover {
+  @apply border-primary/40 bg-primary/5;
+}
+
+.quiz-option--selected {
+  @apply border-primary bg-primary/10 text-white;
+}
+
+.quiz-option--tf {
+  @apply flex-1 justify-center font-semibold;
+}
+
+.quiz-option-radio {
+  @apply w-4 h-4 rounded-full border-2 border-gray-500 flex items-center justify-center shrink-0 transition-colors;
+}
+.quiz-option--selected .quiz-option-radio {
+  @apply border-primary;
+}
+
+.quiz-option-radio-dot {
+  @apply w-2 h-2 rounded-full bg-primary;
+}
+
+.quiz-option-text {
+  @apply flex-1;
+}
+
+.quiz-footer {
+  @apply flex items-center justify-between pt-4 border-t border-border;
+}
+
+/* ── Quiz Results ────────────────────────────────────────────────────────────── */
+.quiz-result-card {
+  @apply rounded-2xl p-8 text-center border;
+}
+.quiz-result-card--pass {
+  @apply bg-secondary/5 border-secondary/20;
+}
+.quiz-result-card--fail {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.quiz-result-icon {
+  @apply mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center;
+}
+.quiz-result-card--pass .quiz-result-icon {
+  @apply bg-secondary/15;
+}
+.quiz-result-card--fail .quiz-result-icon {
+  @apply bg-accent/15;
+}
+
+.quiz-result-title {
+  @apply text-xl font-heading font-bold text-white mb-2;
+}
+
+.quiz-result-score {
+  @apply flex flex-col items-center gap-1;
+}
+
+.quiz-result-score-value {
+  @apply text-4xl font-heading font-extrabold text-white;
+}
+
+.quiz-result-score-label {
+  @apply text-sm text-gray-400;
+}
+
+/* ── Quiz Feedback ───────────────────────────────────────────────────────────── */
+.quiz-feedback {
+  @apply mt-4;
+}
+
+.quiz-feedback-item {
+  @apply p-4 rounded-xl border mb-2;
+}
+.quiz-feedback-item--correct {
+  @apply bg-secondary/5 border-secondary/20;
+}
+.quiz-feedback-item--wrong {
+  @apply bg-accent/5 border-accent/20;
+}
+
+.quiz-feedback-header {
+  @apply flex items-center gap-2 mb-1;
+}
+
+.quiz-feedback-num {
+  @apply text-xs font-bold text-gray-400;
+}
+
+/* ── Quiz Attempts ───────────────────────────────────────────────────────────── */
+.quiz-attempts {
+  @apply mt-4 rounded-xl border border-border overflow-hidden;
+}
+
+.quiz-attempts-table {
+  @apply w-full text-sm;
+}
+
+.quiz-attempts-table thead {
+  @apply bg-surface2;
+}
+
+.quiz-attempts-table th {
+  @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-3;
+}
+
+.quiz-attempts-table td {
+  @apply px-4 py-3 text-sm text-gray-300 border-t border-border;
+}
+
+/* ── Certificate Page ────────────────────────────────────────────────────────── */
+.cert-page {
+  @apply min-h-screen flex items-center justify-center p-6 bg-bg;
+}
+
+.cert-loading {
+  @apply flex flex-col items-center;
+}
+
+.cert-card {
+  @apply max-w-lg w-full rounded-3xl p-10 text-center border relative overflow-hidden;
+}
+
+.cert-card--valid {
+  @apply bg-gradient-card border-primary/30;
+  box-shadow: 0 0 60px rgba(124, 92, 252, 0.12), 0 0 120px rgba(0, 212, 200, 0.06);
+}
+
+.cert-card--invalid {
+  @apply bg-gradient-card border-accent/30;
+}
+
+.cert-verified-banner {
+  @apply inline-flex items-center gap-2 bg-secondary/15 text-secondary text-xs font-bold
+         px-4 py-1.5 rounded-full mb-6 mx-auto;
+}
+
+.cert-logo {
+  @apply text-3xl font-heading font-extrabold bg-gradient-hero bg-clip-text text-transparent mb-1;
+}
+
+.cert-heading {
+  @apply text-sm text-gray-400 uppercase tracking-widest font-semibold mb-6;
+}
+
+.cert-divider {
+  @apply w-24 h-px bg-gradient-hero mx-auto my-6;
+}
+
+.cert-label {
+  @apply text-xs text-gray-500 mb-1;
+}
+
+.cert-student-name {
+  @apply text-2xl md:text-3xl font-heading font-extrabold text-white mb-4;
+}
+
+.cert-course-title {
+  @apply text-lg font-heading font-bold bg-gradient-hero bg-clip-text text-transparent mb-6;
+}
+
+.cert-meta {
+  @apply flex flex-col sm:flex-row gap-4 justify-center text-xs text-gray-400;
+}
+
+.cert-meta-item {
+  @apply flex items-center gap-1.5;
+}
+
+.cert-status-icon {
+  @apply mx-auto mb-6;
+}
+
+.cert-status-icon--invalid {
+  @apply text-accent;
+}
+
+.cert-title {
+  @apply text-2xl font-heading font-bold text-white mb-3;
+}
+
+.cert-subtitle {
+  @apply text-gray-400 leading-relaxed;
+}
+
+/* ── Admin Users Table ───────────────────────────────────────────────────────── */
+.admin-users-table-wrap {
+  @apply rounded-2xl border border-border overflow-x-auto bg-surface;
+}
+
+.admin-users-table {
+  @apply w-full text-sm min-w-[640px];
+}
+
+.admin-users-table thead {
+  @apply bg-surface2;
+}
+
+.admin-users-table th {
+  @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 py-3;
+}
+
+.admin-users-table td {
+  @apply px-5 py-4 text-gray-300 border-t border-border;
+}
+
+.admin-users-table tr:hover td {
+  @apply bg-surface2/50;
+}
+
+.admin-user-avatar {
+  @apply w-9 h-9 rounded-full bg-gradient-hero flex items-center justify-center text-white text-sm font-bold shrink-0;
+}
+
+/* ── Screen reader only ──────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+

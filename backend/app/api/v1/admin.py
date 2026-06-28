@@ -126,3 +126,28 @@ async def pending_mentors(
         select(User).where(User.role == UserRole.mentor, User.is_approved == False)
     )
     return result.scalars().all()
+
+
+@router.get("/users")
+async def list_all_users(
+    role: UserRole | None = None,
+    search: str | None = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, le=200),
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin-only: list all platform users with optional role / search filters."""
+    stmt = select(User)
+    if role:
+        stmt = stmt.where(User.role == role)
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(
+            (User.full_name.ilike(pattern)) | (User.email.ilike(pattern)) | (User.username.ilike(pattern))
+        )
+    total = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar()
+    stmt = stmt.order_by(User.created_at.desc()).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    users = result.scalars().all()
+    return {"users": users, "total": total}

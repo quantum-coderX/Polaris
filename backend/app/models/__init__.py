@@ -6,7 +6,7 @@ from app.models.payment import Payment, PaymentProvider, PaymentStatus
 from app.models.review import Review
 from app.models.notification import Notification, NotificationType
 from app.models.qa import QAMessage
-from app.models.quiz import Quiz, QuizQuestion, QuizQuestionType
+from app.models.quiz import Quiz, QuizQuestion, QuizAttempt, QuizQuestionType
 
 __all__ = [
     "User", "UserRole",
@@ -17,5 +17,5 @@ __all__ = [
     "Review",
     "Notification", "NotificationType",
     "QAMessage",
-    "Quiz", "QuizQuestion", "QuizQuestionType",
+    "Quiz", "QuizQuestion", "QuizAttempt", "QuizQuestionType",
 ]
