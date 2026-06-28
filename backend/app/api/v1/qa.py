@@ -1,22 +1,20 @@
-import json
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from pydantic import ValidationError
 
 from app.core.database import get_db, AsyncSessionLocal
 from app.core.security import decode_token
 from app.core.deps import get_current_user
 from app.models.user import User, UserRole
 from app.models.qa import QAMessage
+from app.models.course import Course
 from app.websockets.qa_manager import manager
 
 router = APIRouter(prefix="/qa", tags=["Q&A"])
 
 
-from app.schemas.qa import QAMessageOut, QAMessageCreate
+from app.schemas.qa import QAMessageOut, QAMessageCreate, QAClientFrame, QAEventFrame
 
 
 # ── HTTP endpoints ───────────────────────────────────────────────────────────
@@ -60,6 +58,36 @@ async def post_message(
     db.add(msg)
     await db.flush()
     await db.refresh(msg)
+
+    # ── Email the parent question author on reply (non-blocking) ────────
+    if body.parent_id:
+        try:
+            from app.core.email import send_email, qa_answer_email
+            parent_result = await db.execute(
+                select(QAMessage).where(QAMessage.id == body.parent_id)
+            )
+            parent_msg = parent_result.scalar_one_or_none()
+            if parent_msg and parent_msg.author_id != current_user.id:
+                author_result = await db.execute(
+                    select(User).where(User.id == parent_msg.author_id)
+                )
+                author = author_result.scalar_one_or_none()
+                course_result = await db.execute(
+                    select(Course).where(Course.id == course_id)
+                )
+                _course = course_result.scalar_one_or_none()
+                if author and _course:
+                    qa_url = f"http://localhost:5173/learn/{course_id}"
+                    await send_email(
+                        to=author.email,
+                        subject=f"Your question in {_course.title} was answered – Polaris",
+                        html_body=qa_answer_email(
+                            author.full_name, _course.title, body.body, qa_url
+                        ),
+                    )
+        except Exception:
+            pass
+
     return msg
 
 
@@ -129,11 +157,9 @@ async def qa_websocket(
     try:
         while True:
             raw = await websocket.receive_text()
-            data = json.loads(raw)
-            body_text = data.get("body", "").strip()
-            parent_id = data.get("parent_id")
-
-            if not body_text:
+            try:
+                client_frame = QAClientFrame.model_validate_json(raw)
+            except ValidationError:
                 continue
 
             # ── Persist to DB ────────────────────────────────────────────────
@@ -141,31 +167,19 @@ async def qa_websocket(
                 msg = QAMessage(
                     course_id=course_id,
                     author_id=user_id,
-                    body=body_text,
-                    parent_id=parent_id,
+                    body=client_frame.body,
+                    parent_id=client_frame.parent_id,
                 )
                 db.add(msg)
                 await db.commit()
                 await db.refresh(msg)
 
-                outbound = {
-                    "event": "message",
-                    "data": {
-                        "id": msg.id,
-                        "course_id": msg.course_id,
-                        "author_id": msg.author_id,
-                        "parent_id": msg.parent_id,
-                        "body": msg.body,
-                        "is_pinned": msg.is_pinned,
-                        "upvotes": msg.upvotes,
-                        "created_at": msg.created_at.isoformat(),
-                    },
-                }
+            frame = QAEventFrame(data=QAMessageOut.model_validate(msg))
 
-            # ── Broadcast to entire room ─────────────────────────────────────
-            await manager.broadcast(course_id, outbound)
+            # ── Fan-out via Redis Pub/Sub (local-only fallback when unset) ───
+            await manager.publish(course_id, frame)
 
     except WebSocketDisconnect:
-        manager.disconnect(websocket, course_id)
+        await manager.disconnect(websocket, course_id)
     except Exception:
-        manager.disconnect(websocket, course_id)
+        await manager.disconnect(websocket, course_id)

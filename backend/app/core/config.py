@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production"
+    # Admin secret key — must be passed in the admin login request alongside credentials.
+    # Keep this value long, random, and out of version control.
+    ADMIN_SECRET: str = "change-admin-secret-in-production"
 
     # Database (async)
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/Polaris"

@@ -8,8 +8,8 @@ export default {
     extend: {
       fontFamily: {
         sans:    ['Inter', 'sans-serif'],
-        heading: ['"Playfair Display"', 'Georgia', 'serif'],
-        serif:   ['"Playfair Display"', 'Georgia', 'serif'],
+        heading: ['Inter', 'sans-serif'],
+        serif:   ['Inter', 'sans-serif'],
         body:    ['Inter', 'sans-serif'],
       },
       colors: {
@@ -18,31 +18,31 @@ export default {
         surface:   'var(--color-surface)',
         surface2:  'var(--color-surface-2)',
         border:    'var(--color-border)',
-        primary:   '#C5922B',   // antique gold (same in both modes)
-        secondary: '#A04C30',   // terracotta
-        accent:    '#8B2D3E',   // burgundy
-        gold:      '#D4A843',
-        // Academia metric accent colors
-        'metric-forest':   '#3D6B50',
-        'metric-scholar':  '#5C4A7A',
-        'metric-gold':     '#C5922B',
-        'metric-inkblue':  '#2E5A8B',
-        'metric-burgundy': '#8B2D3E',
-        'metric-teal':     '#2A6B5C',
+        primary:   'var(--color-primary)',   // Electric Violet
+        secondary: 'var(--color-secondary)', // Luminous Emerald
+        accent:    'var(--color-accent)',    // Danger/Error Red
+        gold:      'var(--color-gold)',      // Warning/Alert Amber
+        // premium design system colors
+        'metric-violet': '#8B5CF6',
+        'metric-emerald': '#10B981',
+        'metric-amber': '#F59E0B',
+        'metric-rose': '#F43F5E',
+        'metric-blue': '#3B82F6',
+        'metric-cyan': '#06B6D4',
       },
       backgroundImage: {
-        'gradient-hero': 'linear-gradient(135deg, #C5922B 0%, #8B2D3E 100%)',
+        'gradient-hero': 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
         'gradient-card': 'linear-gradient(145deg, var(--color-surface) 0%, var(--color-bg) 100%)',
-        'gradient-gold': 'linear-gradient(135deg, #D4A843 0%, #C5922B 100%)',
+        'gradient-violet-emerald': 'linear-gradient(135deg, #8B5CF6 0%, #10B981 100%)',
       },
       boxShadow: {
-        glow:       '0 0 30px rgba(197,146,43,0.35)',
-        'glow-lg':  '0 0 60px rgba(197,146,43,0.50)',
-        'metric':   '0 2px 16px rgba(0,0,0,0.15)',
-        'card-warm':'0 2px 20px rgba(42,28,15,0.10)',
+        glow:       '0 0 30px rgba(139,92,246,0.15)',
+        'glow-lg':  '0 0 60px rgba(139,92,246,0.30)',
+        'glow-emerald': '0 0 30px rgba(16,185,129,0.15)',
+        'metric':   '0 4px 20px rgba(0,0,0,0.05)',
       },
       borderRadius: {
-        'arch': '80px 80px 0 0',
+        'arch': '12px 12px 0 0',
       },
       animation: {
         'fade-in':    'fadeIn 0.5s ease forwards',
@@ -55,11 +55,12 @@ export default {
           to:   { opacity: 1, transform: 'translateY(0)' },
         },
         glowPulse: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(197,146,43,0.2)' },
-          '50%':      { boxShadow: '0 0 50px rgba(197,146,43,0.5)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(139,92,246,0.1)' },
+          '50%':      { boxShadow: '0 0 50px rgba(139,92,246,0.3)' },
         },
       },
     },
   },
   plugins: [],
 }
+

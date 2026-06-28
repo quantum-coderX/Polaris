@@ -52,6 +52,19 @@ async def enroll(
     db.add(enrollment)
     await db.flush()
     await db.refresh(enrollment)
+
+    # ── Email notification (non-blocking) ─────────────────────────────────
+    try:
+        from app.core.email import send_email, enrollment_email
+        learn_url = f"http://localhost:5173/learn/{course_id}"
+        await send_email(
+            to=current_user.email,
+            subject=f"You're enrolled in {course.title} – Polaris",
+            html_body=enrollment_email(current_user.full_name, course.title, learn_url),
+        )
+    except Exception:
+        pass
+
     return enrollment
 
 

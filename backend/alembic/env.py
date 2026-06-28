@@ -22,6 +22,7 @@ from app.models.review import Review       # noqa: F401
 from app.models.qa import QAMessage        # noqa: F401
 from app.models.quiz import Quiz, QuizQuestion, QuizAttempt  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
+from app.models.gamification import Streak, PointsLedger, LeaderboardEntry  # noqa: F401
 
 # ── Config ──────────────────────────────────────────────────────────────────
 config = context.config

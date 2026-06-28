@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
+import { useAuthStore, AUTH_STATUS, ROLES } from '../../store/authStore'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useThemeStore } from '../../store/themeStore'
 
 export default function MainLayout() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, authStatus, logout } = useAuthStore()
   const navigate = useNavigate()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { theme, toggleTheme } = useThemeStore()
@@ -27,7 +27,12 @@ export default function MainLayout() {
   const handleLinkClick = () => setIsMobileMenuOpen(false)
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}
+      data-auth-status={authStatus}
+      data-user-role={user?.role ?? 'none'}
+    >
       <nav className="navbar">
         <div className="container navbar__inner relative">
           <NavLink to="/" className="navbar__logo" onClick={handleLinkClick}>Polaris</NavLink>
@@ -71,7 +76,7 @@ export default function MainLayout() {
               Courses
             </NavLink>
 
-            {isAuthenticated() ? (
+            {authStatus === AUTH_STATUS.AUTHENTICATED && user ? (
               <>
                 <NavLink
                   to="/dashboard"
@@ -80,7 +85,7 @@ export default function MainLayout() {
                 >
                   Dashboard
                 </NavLink>
-                {user?.role === 'mentor' && (
+                {user.role === ROLES.MENTOR && (
                   <NavLink
                     to="/mentor"
                     className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
@@ -89,7 +94,7 @@ export default function MainLayout() {
                     My Courses
                   </NavLink>
                 )}
-                {user?.role === 'admin' && (
+                {user.role === ROLES.ADMIN && (
                   <NavLink
                     to="/admin"
                     className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
