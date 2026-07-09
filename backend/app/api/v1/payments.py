@@ -1,13 +1,28 @@
 """
 Stripe-only payment integration (sandbox).
 PayPal removed — cleaner implementation, focused on production patterns.
+
+Microservice note:
+  After a successful Stripe webhook, this service fires an HTTP call to
+  notif-service (/internal/notify) so the user receives a real-time
+  enrollment-confirmed notification. The notif-service URL is resolved
+  from the NOTIF_SERVICE_URL environment variable (default: Docker network
+  hostname http://notif-service:8002).
 """
+import os
+import logging
 import stripe
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
+
+# Internal URL for notif-service — overridable via env for local / test runs
+NOTIF_SERVICE_URL = os.getenv("NOTIF_SERVICE_URL", "http://notif-service:8002")
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_admin
@@ -23,6 +38,35 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 from app.schemas.payment import CheckoutRequest, CheckoutResponse, RefundRequest
+
+
+# ── Cross-service helper ──────────────────────────────────────────────────────
+
+async def _notify_enrollment(user_id: int, course_title: str, course_id: int) -> None:
+    """
+    Fire-and-forget HTTP call to notif-service.
+    Any failure is logged but intentionally swallowed — a notification failure
+    should never roll back a confirmed payment.
+    """
+    payload = {
+        "user_id": user_id,
+        "type": "enrollment",
+        "title": "Enrollment Confirmed! 🎉",
+        "message": f"You're now enrolled in '{course_title}'. Start learning!",
+        "action_url": f"/courses/{course_id}",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            headers = {"X-Internal-Token": settings.INTERNAL_AUTH_TOKEN}
+            resp = await client.post(
+                f"{NOTIF_SERVICE_URL}/internal/notify",
+                json=payload,
+                headers=headers,
+            )
+            resp.raise_for_status()
+    except Exception as exc:
+        # Non-critical — log and continue
+        logger.warning("Failed to send enrollment notification to notif-service: %s", exc)
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -140,6 +184,15 @@ async def stripe_webhook(
             await db.flush()
             payment.enrollment_id = enrollment.id
             db.add(payment)
+
+            # ── Cross-service: notify student via notif-service ───────────────
+            # Fetch course title for the notification message
+            course_result = await db.execute(
+                select(Course).where(Course.id == course_id)
+            )
+            enrolled_course = course_result.scalar_one_or_none()
+            course_title = enrolled_course.title if enrolled_course else "your course"
+            await _notify_enrollment(user_id, course_title, course_id)
 
     # ── charge.dispute.created → suspend enrollment ──────────────────────────
     elif event["type"] == "charge.dispute.created":

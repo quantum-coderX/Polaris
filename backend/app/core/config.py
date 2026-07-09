@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 from functools import lru_cache
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -54,7 +56,21 @@ class Settings(BaseSettings):
     # Frontend URL (used in certificate verification links)
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Internal Microservice Communication Token
+    INTERNAL_AUTH_TOKEN: str = "default-internal-token-change-me"
+
+    @model_validator(mode="after")
+    def validate_secrets(self) -> "Settings":
+        is_testing = os.getenv("TESTING", "").lower() in ("1", "true", "yes")
+        if not self.DEBUG and not is_testing:
+            if self.SECRET_KEY == "change-me-in-production":
+                raise ValueError("SECRET_KEY must be changed in production!")
+            if self.INTERNAL_AUTH_TOKEN == "default-internal-token-change-me":
+                raise ValueError("INTERNAL_AUTH_TOKEN must be changed in production!")
+        return self
+
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
