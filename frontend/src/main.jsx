@@ -4,6 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
+import { useThemeStore } from './store/themeStore.js'
+
+// Initialize theme from persisted store before first render
+useThemeStore.getState().initTheme()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,9 +26,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1e1e2e',
-            color: '#cdd6f4',
-            border: '1px solid #313244',
+            background: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-card)',
           },
         }}
       />

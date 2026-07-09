@@ -15,6 +15,8 @@ from app.core.deps import get_current_user, require_mentor, require_student
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.quiz import Quiz, QuizQuestion, QuizAttempt, QuizQuestionType
+from app.core.gamification_service import award_points, POINTS_QUIZ_PASS
+from app.models.gamification import PointReason
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
@@ -161,6 +163,19 @@ async def submit_quiz(
     db.add(attempt)
     await db.flush()
     await db.refresh(attempt)
+
+    # ── Gamification hook (non-blocking) ───────────────────────────────
+    if passed:
+        try:
+            await award_points(
+                db, current_user.id,
+                POINTS_QUIZ_PASS,
+                PointReason.quiz_pass,
+                description=f"Passed quiz {quiz_id}",
+                reference_id=f"quiz:{quiz_id}",
+            )
+        except Exception:
+            pass  # Never block quiz results for gamification errors
 
     return QuizResult(
         quiz_id=quiz_id,

@@ -32,6 +32,14 @@ from app.schemas.auth import (
     UserOut,
     TwoFASetupResponse,
 )
+from pydantic import SecretStr
+
+
+class AdminLoginRequest(BaseModel):
+    """Login body for the dedicated admin portal — requires extra secret key."""
+    email: EmailStr
+    password: str
+    admin_secret: SecretStr
 
 
 # ---- Helpers ---------------------------------------------------------------
@@ -59,6 +67,14 @@ async def register(request: Request, body: RegisterRequest, db: AsyncSession = D
 
     if len(body.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+    # ── Security: block self-registration as admin ──────────────────────────
+    # Admin accounts must be created directly via DB or a seeded script.
+    if body.role == UserRole.admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin accounts cannot be created via self-registration.",
+        )
 
     user = User(
         email=body.email,
@@ -100,6 +116,61 @@ async def login(
     refresh_token = create_refresh_token(user.id)
 
     # Store refresh token in httpOnly cookie
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
+        path="/api/v1/auth/refresh",
+    )
+    return TokenResponse(access_token=access_token)
+
+
+# ── Admin-only Login ─────────────────────────────────────────────────────────
+
+@router.post("/admin-login", response_model=TokenResponse)
+@limiter.limit("5/minute")
+async def admin_login(
+    request: Request,
+    body: AdminLoginRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Dedicated login endpoint for admin accounts.
+    Requires valid email + password **and** the correct ADMIN_SECRET.
+    Defense-in-depth: even if someone guesses credentials they cannot
+    obtain an admin token without also knowing the secret key.
+    """
+    # 1. Verify admin secret first — fail fast with a generic error
+    #    so as not to reveal whether the email even exists.
+    if body.admin_secret.get_secret_value() != settings.ADMIN_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # 2. Verify email + password
+    result = await db.execute(select(User).where(User.email == body.email))
+    user: User | None = result.scalar_one_or_none()
+    if not user or not verify_password(body.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # 3. Verify the account is actually an admin in the DB
+    if user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    # 4. Verify the account is active
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is inactive")
+
+    # 5. Handle 2FA — return partial token if enabled
+    if user.is_2fa_enabled:
+        pre_auth_token = create_access_token(user.id, "pre_auth")
+        return TokenResponse(access_token=pre_auth_token, requires_2fa=True)
+
+    # 6. Issue full tokens
+    access_token = create_access_token(user.id, user.role)
+    refresh_token = create_refresh_token(user.id)
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,

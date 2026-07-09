@@ -1,14 +1,44 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
 
+const ALERT_MESSAGES = {
+  unauthenticated: (state) => state?.message ?? 'Please sign in to continue.',
+  unauthorized: (state) => state?.message ?? 'You do not have permission to view that page.',
+  session_expired: () => 'Your session expired. Please sign in again.',
+  logged_out: (state) => state?.message ?? 'You have been signed out.',
+}
+
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
+  const [authAlert, setAuthAlert] = useState(null)
   const { login } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const queryReason = searchParams.get('reason')
+    const stateReason = location.state?.reason
+    const reason = stateReason ?? queryReason
+    if (!reason) return
+
+    const resolver = ALERT_MESSAGES[reason]
+    const message = resolver ? resolver(location.state) : null
+    if (message) {
+      setAuthAlert({ reason, message })
+      toast.error(message)
+    }
+
+    if (queryReason || stateReason) {
+      navigate({ pathname: '/login', search: '' }, { replace: true, state: {} })
+    }
+    // Show redirect alert once when landing on /login
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -37,6 +67,21 @@ export default function Login() {
           </div>
           <p className="text-gray-400 text-sm mt-2">Sign in to continue learning</p>
         </div>
+
+        {authAlert && (
+          <div
+            role="alert"
+            data-auth-alert-reason={authAlert.reason}
+            className="mb-4 rounded-xl border px-4 py-3 text-sm"
+            style={{
+              background: 'var(--color-surface-2)',
+              borderColor: 'var(--color-accent)',
+              color: 'var(--color-text)',
+            }}
+          >
+            {authAlert.message}
+          </div>
+        )}
 
         <form id="login-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="form-group">

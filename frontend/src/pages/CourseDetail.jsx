@@ -7,6 +7,7 @@ import {
   Clock, Star, ChevronDown, ChevronUp,
   PlayCircle, FileText, Lock, CheckCircle, ShoppingCart, BookOpen
 } from 'lucide-react'
+import { getAcademiaThumb } from './Home'
 
 /** Parses a value that may be a JSON array string ["a","b"] or a plain newline-separated string */
 const parseJsonOrSplit = (value) => {
@@ -87,11 +88,15 @@ export default function CourseDetail() {
 
   if (isLoading) return <LoadingScreen />
 
+  const thumbSrc = course?.thumbnail_url ?? getAcademiaThumb(course?.id)
+
   return (
-    <div className="min-h-screen bg-bg">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-surface2 via-[#16213e] to-bg border-b border-border py-12 md:py-16">
-        <div className="container grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+      {/* Hero — library-tinted header */}
+      <div className="relative border-b py-12 md:py-16 overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
+        {/* Subtle bg tint */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg) 100%)' }} />
+        <div className="container relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left info column */}
           <div className="lg:col-span-2">
             <div className="flex gap-2 mb-4">
@@ -117,14 +122,21 @@ export default function CourseDetail() {
 
           {/* Right sticky checkout column */}
           <div className="lg:col-span-1 w-full lg:sticky lg:top-24">
-            <div className="bg-surface border border-border rounded-2xl p-6 shadow-glow">
+            <div className="card p-6">
               <img
-                src={course?.thumbnail_url ?? `https://picsum.photos/seed/${course?.id}/400/225`}
+                src={thumbSrc}
                 alt={course?.title}
                 className="w-full rounded-xl mb-4 object-cover aspect-video"
+                style={{ filter: 'sepia(10%)' }}
               />
-              <div className="text-3xl font-heading font-extrabold mb-4 text-white">
-                {course?.is_free ? <span className="text-secondary">Free</span> : `$${Number(course?.price).toFixed(2)}`}
+              <div
+                style={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontSize: '1.8rem', fontWeight: 800,
+                  marginBottom: '1rem', color: 'var(--color-text)',
+                }}
+              >
+                {course?.is_free ? <span style={{ color: 'var(--color-primary)' }}>Free</span> : `$${Number(course?.price).toFixed(2)}`}
               </div>
 
               {enrollment ? (

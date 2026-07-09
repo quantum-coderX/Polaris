@@ -1,8 +1,8 @@
 version: "3.9"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  Polaris — Microservice Architecture
-#  6 containers: postgres · auth-service · payment-service · notif-service
+#  Polaris — Microservice Architecture with Gamification (Redis)
+#  7 containers: postgres · redis · auth-service · payment-service · notif-service
 #                core-service · nginx-gateway · frontend
 #
 #  All traffic enters through Nginx on port 80.
@@ -31,6 +31,20 @@ services:
     networks:
       - polaris_net
 
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: Polaris_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - polaris_net
+
   # ── Auth Service (:8001) ────────────────────────────────────────────────────
   # Owns: /api/v1/auth/* and /api/v1/users/*
   auth-service:
@@ -41,6 +55,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
     command: uvicorn auth_main:app --host 0.0.0.0 --port 8001 --reload
     ports:
       - "8001:8001"   # exposed for direct debug / Postman
@@ -64,6 +79,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
       NOTIF_SERVICE_URL: http://notif-service:8002
+      REDIS_URL: redis://redis:6379/0
     command: uvicorn payment_main:app --host 0.0.0.0 --port 8003 --reload
     ports:
       - "8003:8003"   # Stripe webhooks must also be forwarded here in dev
@@ -86,6 +102,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
     command: uvicorn notif_main:app --host 0.0.0.0 --port 8002 --reload
     ports:
       - "8002:8002"   # exposed for direct debug
@@ -108,6 +125,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"   # exposed for direct debug
@@ -115,6 +133,8 @@ services:
       - ./backend:/app
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - polaris_net
@@ -167,3 +187,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:

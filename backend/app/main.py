@@ -18,10 +18,12 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import get_settings
 from app.core.database import engine, Base
 from app.core.limiter import limiter, rate_limit_exceeded_handler
+from app.websockets.qa_manager import manager as qa_manager
 from app.api.v1 import (
     courses, lessons, enrollments,
     reviews, qa, search,
     admin, quizzes, certificates,
+    gamification,
 )
 
 settings = get_settings()
@@ -32,7 +34,9 @@ async def lifespan(app: FastAPI):
     # Ensure tables exist (Alembic handles migrations in production)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await qa_manager.start()
     yield
+    await qa_manager.shutdown()
     await engine.dispose()
 
 
@@ -71,6 +75,7 @@ app.include_router(search.router,       prefix=PREFIX)
 app.include_router(admin.router,        prefix=PREFIX)
 app.include_router(quizzes.router,      prefix=PREFIX)
 app.include_router(certificates.router, prefix=PREFIX)
+app.include_router(gamification.router, prefix=PREFIX)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

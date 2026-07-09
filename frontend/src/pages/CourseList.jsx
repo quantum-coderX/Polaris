@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
 import { Search, Clock, X, Sliders } from 'lucide-react'
+import { getAcademiaThumb } from './Home'
 
 const LEVELS = ['beginner', 'intermediate', 'advanced']
 const LANGUAGES = ['English', 'Hindi', 'Tamil', 'Spanish', 'French']
@@ -12,9 +13,9 @@ export default function CourseList() {
   const [showFilters, setShowFilters] = useState(false)
   const [q, setQ] = useState(searchParams.get('q') || '')
 
-  const level = searchParams.get('level') || ''
+  const level    = searchParams.get('level') || ''
   const language = searchParams.get('language') || ''
-  const isFree = searchParams.get('is_free') || ''
+  const isFree   = searchParams.get('is_free') || ''
   const minPrice = searchParams.get('min_price') || ''
   const maxPrice = searchParams.get('max_price') || ''
 
@@ -62,24 +63,37 @@ export default function CourseList() {
   const activeFilters = [level, language, isFree, minPrice, maxPrice].filter(Boolean).length
 
   return (
-    <div className="min-h-screen bg-bg">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-surface2 via-[#16213e] to-bg border-b border-border py-12 md:py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-5xl font-heading mb-2 text-white">
-            Browse <span className="bg-gradient-hero bg-clip-text text-transparent">Courses</span>
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+      {/* Header — library image background */}
+      <div className="relative border-b py-16 md:py-24 overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80')` }}
+        />
+        <div className="absolute inset-0" style={{ background: 'rgba(10,7,4,0.78)' }} />
+        <div className="container relative z-10">
+          <h1
+            style={{
+              fontFamily: '"Playfair Display", Georgia, serif',
+              fontSize: 'clamp(2.2rem, 5vw, 4rem)',
+              fontWeight: 900, color: '#F5EFE2', marginBottom: '0.5rem',
+            }}
+          >
+            Browse{' '}
+            <em style={{ color: '#C5922B', fontStyle: 'italic' }}>Courses</em>
           </h1>
-          <p className="text-gray-400 mb-6">
-            {courses ? `${courses.length} courses found` : 'Explore thousands of expert-led courses'}
+          <p style={{ color: 'rgba(230,217,194,0.75)', marginBottom: '1.5rem', fontSize: '1rem' }}>
+            {courses ? `${courses.length} courses found` : 'Explore our expert-led academic catalogue'}
           </p>
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl w-full">
             <div className="relative flex-grow">
-              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(230,217,194,0.5)' }} />
               <input
                 id="course-search"
-                className="form-input pl-10"
+                className="pl-10 w-full py-3.5 rounded-lg text-sm outline-none"
+                style={{ background: 'rgba(253,252,247,0.10)', border: '1px solid rgba(197,146,43,0.40)', color: '#F5EFE2', backdropFilter: 'blur(8px)' }}
                 placeholder="Search courses, topics, skills..."
                 value={q}
                 onChange={e => setQ(e.target.value)}
@@ -87,9 +101,9 @@ export default function CourseList() {
             </div>
             <div className="flex gap-3 w-full sm:w-auto">
               <button type="submit" className="btn btn-primary flex-1 sm:flex-initial">Search</button>
-              <button 
-                type="button" 
-                className="btn btn-secondary flex items-center justify-center gap-2 relative flex-1 sm:flex-initial" 
+              <button
+                type="button"
+                className="btn btn-secondary flex items-center justify-center gap-2 relative flex-1 sm:flex-initial"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Sliders size={16} /> Filters
@@ -107,8 +121,8 @@ export default function CourseList() {
       <div className="container py-8">
         {/* Filter Panel */}
         {showFilters && (
-          <div className="bg-surface border border-border rounded-2xl p-6 mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end animate-fade-in">
-            {/* Level */}
+          <div className="rounded-2xl border p-6 mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end animate-fade-in"
+            style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
             <div>
               <label className="form-label" htmlFor="filter-level">Level</label>
               <select id="filter-level" className="form-select" value={level} onChange={e => setFilter('level', e.target.value)}>
@@ -116,8 +130,6 @@ export default function CourseList() {
                 {LEVELS.map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
               </select>
             </div>
-
-            {/* Language */}
             <div>
               <label className="form-label" htmlFor="filter-lang">Language</label>
               <select id="filter-lang" className="form-select" value={language} onChange={e => setFilter('language', e.target.value)}>
@@ -125,8 +137,6 @@ export default function CourseList() {
                 {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
-
-            {/* Price Availability */}
             <div>
               <label className="form-label" htmlFor="filter-price">Availability</label>
               <select id="filter-price" className="form-select" value={isFree} onChange={e => setFilter('is_free', e.target.value)}>
@@ -135,8 +145,6 @@ export default function CourseList() {
                 <option value="false">Paid Only</option>
               </select>
             </div>
-
-            {/* Price Range */}
             <div>
               <label className="form-label" htmlFor="filter-min-price">Min Price ($)</label>
               <input id="filter-min-price" className="form-input" type="number" min={0} value={minPrice}
@@ -147,7 +155,6 @@ export default function CourseList() {
               <input id="filter-max-price" className="form-input" type="number" min={0} value={maxPrice}
                 onChange={e => setFilter('max_price', e.target.value)} placeholder="999" />
             </div>
-
             <div>
               <button type="button" className="btn btn-ghost w-full flex items-center justify-center gap-2" onClick={clearAll}>
                 <X size={14} /> Clear All
@@ -159,12 +166,12 @@ export default function CourseList() {
         {/* Active Filter Tags */}
         {activeFilters > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {level && <FilterTag label={`Level: ${level}`} onRemove={() => setFilter('level', '')} />}
-            {language && <FilterTag label={`Lang: ${language}`} onRemove={() => setFilter('language', '')} />}
-            {isFree === 'true' && <FilterTag label="Free" onRemove={() => setFilter('is_free', '')} />}
+            {level    && <FilterTag label={`Level: ${level}`}     onRemove={() => setFilter('level', '')} />}
+            {language && <FilterTag label={`Lang: ${language}`}    onRemove={() => setFilter('language', '')} />}
+            {isFree === 'true'  && <FilterTag label="Free" onRemove={() => setFilter('is_free', '')} />}
             {isFree === 'false' && <FilterTag label="Paid" onRemove={() => setFilter('is_free', '')} />}
-            {minPrice && <FilterTag label={`Min: $${minPrice}`} onRemove={() => setFilter('min_price', '')} />}
-            {maxPrice && <FilterTag label={`Max: $${maxPrice}`} onRemove={() => setFilter('max_price', '')} />}
+            {minPrice && <FilterTag label={`Min: $${minPrice}`}   onRemove={() => setFilter('min_price', '')} />}
+            {maxPrice && <FilterTag label={`Max: $${maxPrice}`}   onRemove={() => setFilter('max_price', '')} />}
           </div>
         )}
 
@@ -189,9 +196,10 @@ export default function CourseList() {
 
 function FilterTag({ label, onRemove }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+      style={{ background: 'rgba(124,92,252,0.10)', border: '1px solid rgba(124,92,252,0.2)', color: 'var(--color-primary)' }}>
       {label}
-      <button onClick={onRemove} className="text-primary hover:text-white focus:outline-none flex items-center">
+      <button onClick={onRemove} className="hover:opacity-70 focus:outline-none flex items-center" style={{ color: 'var(--color-primary)' }}>
         <X size={12} />
       </button>
     </span>
@@ -199,16 +207,21 @@ function FilterTag({ label, onRemove }) {
 }
 
 function CourseCard({ course }) {
+  const thumb = course.thumbnail_url ?? getAcademiaThumb(course.id)
   return (
     <Link to={`/courses/${course.slug ?? course.id}`} className="card-course">
-      <div className="relative">
+      {/* Arched thumbnail */}
+      <div className="card-course__thumb-wrap">
         <img
-          src={course.thumbnail_url ?? `https://picsum.photos/seed/${course.id}/400/225`}
+          src={thumb}
           alt={course.title}
           className="card-course__thumbnail"
         />
         {course.is_free && (
-          <span className="absolute top-3 right-3 bg-secondary text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase">
+          <span
+            className="absolute top-3 right-3 text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-glow"
+            style={{ background: 'var(--gradient-hero)' }}
+          >
             FREE
           </span>
         )}
@@ -216,18 +229,16 @@ function CourseCard({ course }) {
       <div className="card-course__body">
         <div className="card-course__tags">
           <span className="card-course__tag">{course.level}</span>
-          <span className="text-xs text-gray-400 px-2 py-0.5 rounded bg-surface2">{course.language}</span>
+          <span className="card-course__tag">{course.language}</span>
         </div>
-        <div className="card-course__title">
-          {course.title}
-        </div>
+        <div className="card-course__title">{course.title}</div>
         <div className="card-course__meta">
           <span className="flex items-center gap-1"><Clock size={12} /> {course.total_duration_minutes}m</span>
           <span>{course.total_lessons || 0} lessons</span>
         </div>
         <div className="card-course__price mt-auto pt-2">
           {course.is_free ? (
-            <span className="text-secondary font-extrabold text-base">Free</span>
+            <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>Free</span>
           ) : (
             `$${Number(course.price).toFixed(2)}`
           )}
@@ -239,12 +250,12 @@ function CourseCard({ course }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden opacity-50 flex flex-col h-full">
-      <div className="w-full aspect-video bg-border animate-pulse" />
+    <div className="card-course opacity-60">
+      <div className="w-full aspect-video animate-pulse" style={{ background: 'var(--color-border)', borderRadius: '80px 80px 0 0' }} />
       <div className="p-5 flex-grow">
-        <div className="h-3 bg-border rounded mb-3 w-1/3 animate-pulse" />
-        <div className="h-4 bg-border rounded mb-2 w-3/4 animate-pulse" />
-        <div className="h-3 bg-border rounded w-1/2 animate-pulse mt-4" />
+        <div className="h-3 rounded mb-3 w-1/3 animate-pulse" style={{ background: 'var(--color-border)' }} />
+        <div className="h-4 rounded mb-2 w-3/4 animate-pulse" style={{ background: 'var(--color-border)' }} />
+        <div className="h-3 rounded w-1/2 animate-pulse mt-4" style={{ background: 'var(--color-border)' }} />
       </div>
     </div>
   )
@@ -252,11 +263,15 @@ function SkeletonCard() {
 
 function EmptyState({ onClear }) {
   return (
-    <div className="text-center py-20 px-4">
-      <div className="text-5xl mb-4">🔍</div>
-      <h2 className="text-xl font-bold mb-2 text-white">No courses found</h2>
-      <p className="text-gray-400 mb-6 max-w-sm mx-auto">
-        Try a different search term or adjust your filters to view courses.
+    <div className="text-center py-24 px-4">
+      <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>📚</div>
+      <h2
+        style={{ fontFamily: '"Playfair Display", serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.75rem' }}
+      >
+        No courses found
+      </h2>
+      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', maxWidth: '26rem', margin: '0 auto 1.5rem' }}>
+        Adjust your search or filters to discover more scholarly works.
       </p>
       <button className="btn btn-primary" onClick={onClear}>Clear Filters</button>
     </div>
