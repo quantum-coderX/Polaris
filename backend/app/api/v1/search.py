@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, func
 from typing import Optional
 
+from sqlalchemy import literal_column
+
 from app.core.database import get_db
 from app.models.course import Course, CourseLevel, CourseStatus
 from app.models.review import Review
@@ -27,18 +29,22 @@ def _course_search_vector():
     Weighted English tsvector matching the Alembic migration expression.
 
     title → weight A (highest), short_description → B, tags → C.
+
+    Weights are passed via literal_column so PostgreSQL sees them as ``"char"``
+    literals rather than VARCHAR bound parameters — ``setweight()`` demands
+    the ``"char"`` type (see PostgreSQL docs § 12.3.1).
     """
     title_vec = func.setweight(
         func.to_tsvector("english", func.coalesce(Course.title, "")),
-        "A",
+        literal_column("'A'"),
     )
     desc_vec = func.setweight(
         func.to_tsvector("english", func.coalesce(Course.short_description, "")),
-        "B",
+        literal_column("'B'"),
     )
     tags_vec = func.setweight(
         func.to_tsvector("english", func.coalesce(Course.tags, "")),
-        "C",
+        literal_column("'C'"),
     )
     return title_vec.op("||")(desc_vec).op("||")(tags_vec)
 

@@ -13,18 +13,18 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import get_settings
-from app.core.database import engine, Base
+from app.core.database import engine
 from app.core.limiter import limiter, rate_limit_exceeded_handler
-from app.api.v1 import auth, users
+from app.api.v1.auth import router as auth_router
+from app.api.v1.users import router as users_router
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure tables exist (Alembic handles migrations in production)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Tables are managed by core-service via Alembic / create_all.
+    # This service only connects to the shared DB — no DDL.
     yield
     await engine.dispose()
 
@@ -55,8 +55,8 @@ app.add_middleware(
 # ── Routers ──────────────────────────────────────────────────────────────────
 PREFIX = "/api/v1"
 
-app.include_router(auth.router,  prefix=PREFIX)
-app.include_router(users.router, prefix=PREFIX)
+app.include_router(auth_router,  prefix=PREFIX)
+app.include_router(users_router, prefix=PREFIX)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

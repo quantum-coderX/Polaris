@@ -15,8 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
-from app.core.database import engine, Base
-from app.api.v1 import notifications
+from app.core.database import engine
+from app.api.v1.notifications import router as notif_router
 from app.api.v1.notifications import send_notification
 from app.models.notification import NotificationType
 
@@ -25,8 +25,7 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Tables are managed by core-service via Alembic / create_all.
     yield
     await engine.dispose()
 
@@ -51,7 +50,7 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 PREFIX = "/api/v1"
-app.include_router(notifications.router, prefix=PREFIX)
+app.include_router(notif_router, prefix=PREFIX)
 
 
 # ── Internal cross-service endpoint ──────────────────────────────────────────

@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Polaris — Microservice Architecture with Gamification (Redis)
 #  7 containers: postgres · redis · auth-service · payment-service · notif-service

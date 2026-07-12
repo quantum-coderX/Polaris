@@ -16,8 +16,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.core.database import engine, Base
-from app.api.v1 import payments
+from app.core.database import engine
+from app.api.v1.payments import router as payments_router
 
 settings = get_settings()
 
@@ -27,8 +27,7 @@ NOTIF_SERVICE_URL = os.getenv("NOTIF_SERVICE_URL", "http://notif-service:8002")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Tables are managed by core-service via Alembic / create_all.
     yield
     await engine.dispose()
 
@@ -56,7 +55,7 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 PREFIX = "/api/v1"
-app.include_router(payments.router, prefix=PREFIX)
+app.include_router(payments_router, prefix=PREFIX)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

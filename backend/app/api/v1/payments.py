@@ -19,8 +19,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone
 
-logger = logging.getLogger(__name__)
-
 # Internal URL for notif-service — overridable via env for local / test runs
 NOTIF_SERVICE_URL = os.getenv("NOTIF_SERVICE_URL", "http://notif-service:8002")
 
@@ -327,7 +325,6 @@ async def _handle_charge_refunded(
         "Payment %s refunded via charge.refunded webhook",
         payment.id,
     )
->>>>>>> feature/gamification
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
@@ -468,7 +465,6 @@ async def stripe_webhook(
             "Unexpected error processing Stripe webhook %s (%s)",
             event_type,
             event_id,
->>>>>>> feature/gamification
         )
         # Acknowledge so Stripe does not retry unrecoverable handler failures.
         return {"status": "ok", "event_id": event_id, "note": "handler_error_logged"}

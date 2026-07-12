@@ -19,12 +19,16 @@ from app.core.config import get_settings
 from app.core.database import engine, Base
 from app.core.limiter import limiter, rate_limit_exceeded_handler
 from app.websockets.qa_manager import manager as qa_manager
-from app.api.v1 import (
-    courses, lessons, enrollments,
-    reviews, qa, search,
-    admin, quizzes, certificates,
-    gamification,
-)
+from app.api.v1.courses import router as courses_router
+from app.api.v1.lessons import router as lessons_router
+from app.api.v1.enrollments import router as enrollments_router
+from app.api.v1.reviews import router as reviews_router
+from app.api.v1.qa import router as qa_router
+from app.api.v1.search import router as search_router
+from app.api.v1.admin import router as admin_router
+from app.api.v1.quizzes import router as quizzes_router
+from app.api.v1.certificates import router as certificates_router
+from app.api.v1.gamification import router as gamification_router
 
 settings = get_settings()
 
@@ -66,16 +70,16 @@ app.add_middleware(
 # ── Routers ──────────────────────────────────────────────────────────────────
 PREFIX = "/api/v1"
 
-app.include_router(courses.router,      prefix=PREFIX)
-app.include_router(lessons.router,      prefix=PREFIX)
-app.include_router(enrollments.router,  prefix=PREFIX)
-app.include_router(reviews.router,      prefix=PREFIX)
-app.include_router(qa.router,           prefix=PREFIX)
-app.include_router(search.router,       prefix=PREFIX)
-app.include_router(admin.router,        prefix=PREFIX)
-app.include_router(quizzes.router,      prefix=PREFIX)
-app.include_router(certificates.router, prefix=PREFIX)
-app.include_router(gamification.router, prefix=PREFIX)
+app.include_router(courses_router,      prefix=PREFIX)
+app.include_router(lessons_router,      prefix=PREFIX)
+app.include_router(enrollments_router,  prefix=PREFIX)
+app.include_router(reviews_router,      prefix=PREFIX)
+app.include_router(qa_router,           prefix=PREFIX)
+app.include_router(search_router,       prefix=PREFIX)
+app.include_router(admin_router,        prefix=PREFIX)
+app.include_router(quizzes_router,      prefix=PREFIX)
+app.include_router(certificates_router, prefix=PREFIX)
+app.include_router(gamification_router, prefix=PREFIX)
 
 
 # ── Health check ─────────────────────────────────────────────────────────────
