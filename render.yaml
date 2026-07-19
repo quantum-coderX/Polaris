@@ -16,7 +16,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
     plan: free
     healthCheckPath: /health
     envVars:
@@ -63,7 +63,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: uvicorn auth_main:app --host 0.0.0.0 --port 8001
+    dockerCommand: uvicorn auth_main:app --host 0.0.0.0 --port 10000
     plan: free
     healthCheckPath: /health
     envVars:
@@ -104,7 +104,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: uvicorn payment_main:app --host 0.0.0.0 --port 8003
+    dockerCommand: uvicorn payment_main:app --host 0.0.0.0 --port 10000
     plan: free
     healthCheckPath: /health
     envVars:
@@ -137,7 +137,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    startCommand: uvicorn notif_main:app --host 0.0.0.0 --port 8002
+    dockerCommand: uvicorn notif_main:app --host 0.0.0.0 --port 10000
     plan: free
     healthCheckPath: /health
     envVars:
