@@ -103,8 +103,11 @@ export function bootstrapAuthSession() {
     store.setAuthStatus(AUTH_STATUS.AUTHENTICATING)
 
     try {
+      const authBase = import.meta.env.VITE_AUTH_API_URL
+        ? `${import.meta.env.VITE_AUTH_API_URL}/api/v1`
+        : '/api/v1'
       const { data } = await axios.post(
-        '/api/v1/auth/refresh',
+        `${authBase}/auth/refresh`,
         {},
         { withCredentials: true },
       )

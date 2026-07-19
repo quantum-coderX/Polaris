@@ -1,10 +1,32 @@
 import axios from 'axios'
 import { useAuthStore, AUTH_STATUS } from '../store/authStore'
 
+// Base URLs for each service in production. If not set, falls back to local proxy `/api/v1`
+const SERVICE_URLS = {
+  auth: import.meta.env.VITE_AUTH_API_URL || '',
+  payment: import.meta.env.VITE_PAYMENT_API_URL || '',
+  notif: import.meta.env.VITE_NOTIF_API_URL || '',
+  core: import.meta.env.VITE_CORE_API_URL || import.meta.env.VITE_API_URL || ''
+}
+
+function getBaseUrlForPath(url = '') {
+  const cleanUrl = url.replace(/^\//, '')
+  if (cleanUrl.startsWith('auth') || cleanUrl.startsWith('users')) {
+    return SERVICE_URLS.auth ? `${SERVICE_URLS.auth}/api/v1` : '/api/v1'
+  }
+  if (cleanUrl.startsWith('payments')) {
+    return SERVICE_URLS.payment ? `${SERVICE_URLS.payment}/api/v1` : '/api/v1'
+  }
+  if (cleanUrl.startsWith('notifications')) {
+    return SERVICE_URLS.notif ? `${SERVICE_URLS.notif}/api/v1` : '/api/v1'
+  }
+  return SERVICE_URLS.core ? `${SERVICE_URLS.core}/api/v1` : '/api/v1'
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   withCredentials: true, // HttpOnly refresh cookie
 })
+
 
 
 const AUTH_SKIP_PATHS = ['/auth/refresh', '/auth/login', '/auth/admin-login', '/auth/register', '/auth/logout']
@@ -44,6 +66,7 @@ async function refreshAccessToken() {
 }
 
 api.interceptors.request.use((config) => {
+  config.baseURL = getBaseUrlForPath(config.url)
   const token = useAuthStore.getState().accessToken
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

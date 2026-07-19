@@ -35,9 +35,10 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure tables exist (Alembic handles migrations in production)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Ensure tables exist (Alembic handles migrations in production, only run in local/debug mode)
+    if settings.DEBUG:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     await qa_manager.start()
     yield
     await qa_manager.shutdown()
