@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { useAuthStore, AUTH_STATUS, ROLES, bootstrapAuthSession } from './store/authStore'
 
 // Layouts
@@ -139,6 +140,7 @@ export default function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <Analytics />
       </AuthRoot>
     </BrowserRouter>
   )
