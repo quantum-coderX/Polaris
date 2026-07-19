@@ -35,7 +35,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from app.core.config import get_settings
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Escape '%' for configparser interpolation (prevents errors when passwords contain '%')
+db_url_for_alembic = settings.DATABASE_URL.replace("%", "%%")
+config.set_main_option("sqlalchemy.url", db_url_for_alembic)
 
 target_metadata = Base.metadata
 
