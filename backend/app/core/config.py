@@ -1,19 +1,24 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 from functools import lru_cache
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # App
-    APP_NAME: str = "LearnHub API"
+    APP_NAME: str = "Polaris API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production"
+    # Admin secret key — must be passed in the admin login request alongside credentials.
+    # Keep this value long, random, and out of version control.
+    ADMIN_SECRET: str = "change-admin-secret-in-production"
 
     # Database (async)
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/learnhub"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/Polaris"
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
@@ -23,7 +28,7 @@ class Settings(BaseSettings):
     # AWS S3
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
-    AWS_S3_BUCKET: str = "learnhub-media"
+    AWS_S3_BUCKET: str = "Polaris-media"
     AWS_REGION: str = "ap-south-1"
 
     # Stripe (sandbox)
@@ -34,7 +39,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
     # 2FA / TOTP
-    TOTP_ISSUER: str = "LearnHub"
+    TOTP_ISSUER: str = "Polaris"
 
     # Rate limiting (requests per minute)
     RATE_LIMIT_LOGIN: str = "5/minute"
@@ -49,12 +54,26 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAILS_FROM: str = "noreply@learnhub.io"
+    EMAILS_FROM: str = "noreply@Polaris.io"
 
     # Frontend URL (used in certificate verification links)
     FRONTEND_URL: str = "http://localhost:5173"
+
+    # Internal Microservice Communication Token
+    INTERNAL_AUTH_TOKEN: str = "default-internal-token-change-me"
+
+    @model_validator(mode="after")
+    def validate_secrets(self) -> "Settings":
+        is_testing = os.getenv("TESTING", "").lower() in ("1", "true", "yes")
+        if not self.DEBUG and not is_testing:
+            if self.SECRET_KEY == "change-me-in-production":
+                raise ValueError("SECRET_KEY must be changed in production!")
+            if self.INTERNAL_AUTH_TOKEN == "default-internal-token-change-me":
+                raise ValueError("INTERNAL_AUTH_TOKEN must be changed in production!")
+        return self
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+

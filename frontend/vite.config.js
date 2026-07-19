@@ -9,6 +9,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        followRedirects: true,
       },
       '/ws': {
         target: 'ws://localhost:8000',
@@ -18,3 +19,4 @@ export default defineConfig({
     },
   },
 })
+

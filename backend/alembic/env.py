@@ -22,6 +22,7 @@ from app.models.review import Review       # noqa: F401
 from app.models.qa import QAMessage        # noqa: F401
 from app.models.quiz import Quiz, QuizQuestion, QuizAttempt  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
+from app.models.gamification import Streak, PointsLedger, LeaderboardEntry  # noqa: F401
 
 # ── Config ──────────────────────────────────────────────────────────────────
 config = context.config
@@ -34,7 +35,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from app.core.config import get_settings
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("+asyncpg", "+psycopg2", 1))
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 target_metadata = Base.metadata
 

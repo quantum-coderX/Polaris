@@ -11,6 +11,11 @@ from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, LessonProgress, EnrollmentStatus
 from app.models.lesson import Lesson
 from app.models.payment import Payment, PaymentStatus
+from app.core.gamification_service import (
+    award_points, record_activity,
+    POINTS_LESSON_COMPLETE,
+)
+from app.models.gamification import PointReason
 
 router = APIRouter(prefix="/enrollments", tags=["Enrollments"])
 
@@ -47,6 +52,19 @@ async def enroll(
     db.add(enrollment)
     await db.flush()
     await db.refresh(enrollment)
+
+    # ── Email notification (non-blocking) ─────────────────────────────────
+    try:
+        from app.core.email import send_email, enrollment_email
+        learn_url = f"http://localhost:5173/learn/{course_id}"
+        await send_email(
+            to=current_user.email,
+            subject=f"You're enrolled in {course.title} – Polaris",
+            html_body=enrollment_email(current_user.full_name, course.title, learn_url),
+        )
+    except Exception:
+        pass
+
     return enrollment
 
 
@@ -55,13 +73,27 @@ async def my_enrollments(
     current_user: User = Depends(require_student),
     db: AsyncSession = Depends(get_db),
 ):
+    from sqlalchemy.orm import joinedload
     result = await db.execute(
-        select(Enrollment).where(
+        select(Enrollment)
+        .where(
             Enrollment.student_id == current_user.id,
             Enrollment.status == EnrollmentStatus.active,
         )
+        .options(joinedload(Enrollment.course))
     )
-    return result.scalars().all()
+    enrollments = result.scalars().all()
+
+    # Build response with denormalized course info
+    out = []
+    for e in enrollments:
+        item = EnrollmentOut.model_validate(e)
+        if e.course:
+            item.course_title = e.course.title
+            item.course_slug = e.course.slug
+            item.course_thumbnail = e.course.thumbnail_url
+        out.append(item)
+    return out
 
 
 @router.get("/{course_id}", response_model=EnrollmentOut)
@@ -109,9 +141,11 @@ async def update_progress(
     )
     lp = result.scalar_one_or_none()
     if not lp:
-        lp = LessonProgress(enrollment_id=enrollment.id, lesson_id=body.lesson_id)
+        lp = LessonProgress(enrollment_id=enrollment.id, lesson_id=body.lesson_id, watch_time_seconds=0)
 
-    lp.watch_time_seconds = max(lp.watch_time_seconds, body.watch_time_seconds)
+    current_watch_time = lp.watch_time_seconds if lp.watch_time_seconds is not None else 0
+    lp.watch_time_seconds = max(current_watch_time, body.watch_time_seconds)
+    was_completed_before = lp.is_completed
     lp.is_completed = body.is_completed
     if body.is_completed and not lp.completed_at:
         lp.completed_at = datetime.now(timezone.utc)
@@ -145,4 +179,19 @@ async def update_progress(
         enrollment.status = EnrollmentStatus.completed
 
     db.add(enrollment)
+
+    # ── Gamification hooks (non-blocking) ─────────────────────────────────────
+    if body.is_completed and not was_completed_before:
+        try:
+            await award_points(
+                db, current_user.id,
+                POINTS_LESSON_COMPLETE,
+                PointReason.lesson_complete,
+                description=f"Completed lesson {body.lesson_id}",
+                reference_id=f"lesson:{body.lesson_id}",
+            )
+            await record_activity(db, current_user.id)
+        except Exception:
+            pass  # Gamification must never break core learning
+
     return {"progress_percent": enrollment.progress_percent, "completed": enrollment.status == EnrollmentStatus.completed}

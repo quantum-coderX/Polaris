@@ -28,6 +28,11 @@ class EnrollmentOut(BaseModel):
     enrolled_at: datetime
     completed_at: Optional[datetime] = None
     certificate_url: Optional[str] = None
+    # Denormalized course info — populated by the /my endpoint
+    course_title: Optional[str] = None
+    course_slug: Optional[str] = None
+    course_thumbnail: Optional[str] = None
+
 
 
 class LessonProgressOut(BaseModel):

@@ -74,9 +74,26 @@ async def create_course(
     return course
 
 
+@router.get("/mine", response_model=list[CourseOut])
+async def my_courses(
+    current_user: User = Depends(require_mentor),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all courses created by the currently authenticated mentor."""
+    result = await db.execute(
+        select(Course).where(Course.mentor_id == current_user.id).order_by(Course.id.desc())
+    )
+    return result.scalars().all()
+
+
 @router.get("/{course_id}", response_model=CourseOut)
-async def get_course(course_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Course).where(Course.id == course_id))
+async def get_course(course_id: str, db: AsyncSession = Depends(get_db)):
+    """Look up a course by numeric ID or by URL slug."""
+    # Try numeric ID first
+    if course_id.isdigit():
+        result = await db.execute(select(Course).where(Course.id == int(course_id)))
+    else:
+        result = await db.execute(select(Course).where(Course.slug == course_id))
     course = result.scalar_one_or_none()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -164,6 +181,8 @@ async def delete_course(
     db.add(course)
 
 
+from sqlalchemy.orm import selectinload
+
 # ---- Modules ---------------------------------------------------------------
 
 @router.post("/{course_id}/modules", response_model=ModuleOut, status_code=201)
@@ -180,11 +199,118 @@ async def create_module(
     module = Module(course_id=course_id, **body.model_dump())
     db.add(module)
     await db.flush()
-    await db.refresh(module)
-    return module
+    res = await db.execute(
+        select(Module)
+        .where(Module.id == module.id)
+        .options(selectinload(Module.lessons))
+    )
+    return res.scalar_one()
 
 
 @router.get("/{course_id}/modules", response_model=list[ModuleOut])
 async def list_modules(course_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Module).where(Module.course_id == course_id).order_by(Module.order))
+    result = await db.execute(
+        select(Module)
+        .where(Module.course_id == course_id)
+        .options(selectinload(Module.lessons))
+        .order_by(Module.order)
+    )
     return result.scalars().all()
+
+
+# ---- Per-Course Analytics (Mentor) -----------------------------------------
+
+@router.get("/{course_id}/analytics")
+async def course_analytics(
+    course_id: int,
+    current_user: User = Depends(require_mentor),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Return detailed analytics for a single course.
+    Available to the owning mentor and admins.
+    """
+    from app.models.enrollment import Enrollment, EnrollmentStatus, LessonProgress
+    from app.models.payment import Payment, PaymentStatus
+    from app.models.review import Review, get_weighted_rating_expression
+
+    result = await db.execute(select(Course).where(Course.id == course_id))
+    course = result.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    if course.mentor_id != current_user.id and current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Not your course")
+
+    total_enrollments = (await db.execute(
+        select(func.count(Enrollment.id)).where(Enrollment.course_id == course_id)
+    )).scalar() or 0
+
+    active_enrollments = (await db.execute(
+        select(func.count(Enrollment.id)).where(
+            Enrollment.course_id == course_id,
+            Enrollment.status == EnrollmentStatus.active,
+        )
+    )).scalar() or 0
+
+    completed_enrollments = (await db.execute(
+        select(func.count(Enrollment.id)).where(
+            Enrollment.course_id == course_id,
+            Enrollment.status == EnrollmentStatus.completed,
+        )
+    )).scalar() or 0
+
+    total_revenue = (await db.execute(
+        select(func.sum(Payment.amount)).where(
+            Payment.course_id == course_id,
+            Payment.status == PaymentStatus.completed,
+        )
+    )).scalar() or 0
+    from sqlalchemy import and_, cast, Float, case
+    dialect_name = db.bind.dialect.name
+    weight_expr = get_weighted_rating_expression(dialect_name)
+
+    avg_rating = (await db.execute(
+        select(
+            func.coalesce(func.sum(cast(Review.rating, Float) * weight_expr) / func.nullif(func.sum(weight_expr), 0), 0.0)
+        )
+        .join(
+            Enrollment,
+            and_(
+                Enrollment.course_id == Review.course_id,
+                Enrollment.student_id == Review.student_id
+            )
+        )
+        .where(
+            Review.course_id == course_id,
+            Review.is_approved == True,
+        )
+    )).scalar() or 0.0
+
+    total_reviews = (await db.execute(
+        select(func.count(Review.id)).where(
+            Review.course_id == course_id,
+            Review.is_approved == True,
+        )
+    )).scalar() or 0
+
+    avg_progress = (await db.execute(
+        select(func.avg(Enrollment.progress_percent)).where(
+            Enrollment.course_id == course_id,
+        )
+    )).scalar() or 0
+
+    completion_rate = (completed_enrollments / total_enrollments * 100) if total_enrollments > 0 else 0
+
+    return {
+        "course_id": course_id,
+        "course_title": course.title,
+        "total_enrollments": total_enrollments,
+        "active_enrollments": active_enrollments,
+        "completed_enrollments": completed_enrollments,
+        "completion_rate": round(completion_rate, 1),
+        "average_progress": round(float(avg_progress), 1),
+        "total_revenue": float(total_revenue),
+        "average_rating": round(float(avg_rating), 2),
+        "total_reviews": total_reviews,
+    }
+

@@ -24,8 +24,58 @@ from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.models.user import User, UserRole
 
+# Register all microservice routers for integration testing
+from app.api.v1.auth import router as auth_router
+from app.api.v1.users import router as users_router
+from app.api.v1.payments import router as payments_router
+from app.api.v1.notifications import router as notifications_router, send_notification
+from app.models.notification import NotificationType
+from pydantic import BaseModel
+
+PREFIX = "/api/v1"
+app.include_router(auth_router, prefix=PREFIX)
+app.include_router(users_router, prefix=PREFIX)
+app.include_router(payments_router, prefix=PREFIX)
+app.include_router(notifications_router, prefix=PREFIX)
+
+# Include the internal notify endpoint on the test app
+class InternalNotifyRequest(BaseModel):
+    user_id: int
+    type: str = "enrollment"
+    title: str
+    message: str
+    action_url: str = ""
+
+from fastapi import Header, HTTPException
+
+@app.post("/internal/notify", tags=["Internal"], status_code=202)
+async def internal_notify(
+    body: InternalNotifyRequest,
+    x_internal_token: str = Header(..., alias="X-Internal-Token"),
+):
+    from app.core.config import get_settings
+    settings = get_settings()
+    if x_internal_token != settings.INTERNAL_AUTH_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid internal token")
+
+    try:
+        type_enum = NotificationType(body.type)
+    except ValueError:
+        type_enum = NotificationType.enrollment
+
+    await send_notification(
+        user_id=body.user_id,
+        type=type_enum,
+        title=body.title,
+        message=body.message,
+        action_url=body.action_url,
+    )
+    return {"status": "queued"}
+
+
+
 # ── Test DB (file-based so all connections share the same data) ───────────────
-TEST_DB_PATH = "./test_learnhub.db"
+TEST_DB_PATH = "./test_Polaris.db"
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
 engine_test = create_async_engine(

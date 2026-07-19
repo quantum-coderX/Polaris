@@ -1,12 +1,48 @@
 import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore, AUTH_STATUS } from '../store/authStore'
 
 const api = axios.create({
-  baseURL: '/api/v1',
-  withCredentials: true, // for httpOnly refresh cookie
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  withCredentials: true, // HttpOnly refresh cookie
 })
 
-// Attach access token to every request
+
+const AUTH_SKIP_PATHS = ['/auth/refresh', '/auth/login', '/auth/admin-login', '/auth/register', '/auth/logout']
+
+function shouldSkipTokenRefresh(url = '') {
+  return AUTH_SKIP_PATHS.some((path) => url.includes(path))
+}
+
+/** Single in-flight refresh — concurrent 401s await the same promise (request queue). */
+let refreshPromise = null
+
+async function refreshAccessToken() {
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  const store = useAuthStore.getState()
+  store.setAuthStatus(AUTH_STATUS.AUTHENTICATING)
+
+  refreshPromise = axios
+    .post('/api/v1/auth/refresh', {}, { withCredentials: true })
+    .then(({ data }) => {
+      const newToken = data.access_token
+      store.setAccessToken(newToken)
+      store.setAuthStatus(AUTH_STATUS.AUTHENTICATED)
+      return newToken
+    })
+    .catch((err) => {
+      store.logout()
+      throw err
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken
   if (token) {
@@ -15,52 +51,138 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Auto-refresh on 401
-let isRefreshing = false
-let failedQueue = []
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)))
-  failedQueue = []
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return api(originalRequest)
-          })
-          .catch(Promise.reject)
-      }
 
-      originalRequest._retry = true
-      isRefreshing = true
-
-      try {
-        const { data } = await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true })
-        const newToken = data.access_token
-        useAuthStore.getState().setAccessToken(newToken)
-        processQueue(null, newToken)
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
-        return api(originalRequest)
-      } catch (err) {
-        processQueue(err, null)
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
-        return Promise.reject(err)
-      } finally {
-        isRefreshing = false
-      }
+    if (
+      !originalRequest ||
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      shouldSkipTokenRefresh(originalRequest.url)
+    ) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
-  }
+
+    originalRequest._retry = true
+
+    try {
+      const newToken = await refreshAccessToken()
+      originalRequest.headers = originalRequest.headers ?? {}
+      originalRequest.headers.Authorization = `Bearer ${newToken}`
+      return api(originalRequest)
+    } catch (refreshError) {
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login?reason=session_expired')
+      }
+      return Promise.reject(refreshError)
+    }
+  },
 )
 
 export default api
+
+// ─── Typed API helpers ────────────────────────────────────────────────────────
+
+/** Returns the pre-signed stream URL for a lesson */
+export const getStreamUrl = (lessonId) =>
+  api.get(`/lessons/${lessonId}/stream`).then((r) => r.data)
+
+/** Mark a lesson complete and update progress */
+export const postProgress = (courseId, lessonId) =>
+  api.post(`/enrollments/${courseId}/progress`, { lesson_id: lessonId }).then((r) => r.data)
+
+/** Fetch Q&A messages for a course */
+export const getQAMessages = (courseId) =>
+  api.get(`/qa/${courseId}/messages`).then((r) => r.data)
+
+/** Post a new Q&A message */
+export const postQAMessage = (courseId, body) =>
+  api.post(`/qa/${courseId}/messages`, { body }).then((r) => r.data)
+
+/** Start Stripe checkout — returns { checkout_url } */
+export const createCheckout = (courseId) =>
+  api
+    .post('/payments/checkout', {
+      course_id: courseId,
+      success_url: `${window.location.origin}/checkout/${courseId}?status=success`,
+      cancel_url: `${window.location.origin}/checkout/${courseId}?status=cancelled`,
+    })
+    .then((r) => r.data)
+
+/** Direct free-course enrollment */
+export const enrollFree = (courseId) =>
+  api.post(`/enrollments/${courseId}`).then((r) => r.data)
+
+// ─── Quiz helpers ─────────────────────────────────────────────────────────────
+
+/** Get the quiz attached to a lesson (404 if none) */
+export const getQuizForLesson = (lessonId) =>
+  api.get(`/lessons/${lessonId}/quiz`).then((r) => r.data)
+
+/** Get quiz questions (without correct answers) */
+export const getQuizQuestions = (quizId) =>
+  api.get(`/quizzes/${quizId}/questions`).then((r) => r.data)
+
+/** Submit answers for grading — returns QuizResult */
+export const submitQuiz = (quizId, answers) =>
+  api.post(`/quizzes/${quizId}/submit`, { answers }).then((r) => r.data)
+
+/** Get student's past attempts on a quiz */
+export const getQuizAttempts = (quizId) =>
+  api.get(`/quizzes/${quizId}/attempts`).then((r) => r.data)
+
+// ─── Certificate helpers ──────────────────────────────────────────────────────
+
+/** Generate (or re-fetch) a certificate for a completed course */
+export const generateCertificate = (courseId) =>
+  api.post(`/certificates/${courseId}`).then((r) => r.data)
+
+/** Public verify endpoint (no auth) */
+export const verifyCertificate = (certId) =>
+  api.get(`/certificates/verify/${certId}`).then((r) => r.data)
+
+// ─── Profile helpers ──────────────────────────────────────────────────────────
+
+/** Update the current user's profile */
+export const updateProfile = (data) =>
+  api.patch('/users/me', data).then((r) => r.data)
+
+/** Get the current user's full profile */
+export const getMyProfile = () =>
+  api.get('/auth/me').then((r) => r.data)
+
+// ─── Course Analytics helpers ─────────────────────────────────────────────────
+
+/** Get detailed analytics for a single course (mentor/admin only) */
+export const getCourseAnalytics = (courseId) =>
+  api.get(`/courses/${courseId}/analytics`).then((r) => r.data)
+
+/** Get mentor's aggregate analytics */
+export const getMentorAnalytics = (mentorId) =>
+  api.get(`/admin/mentors/${mentorId}/analytics`).then((r) => r.data)
+
+// ─── Admin helpers ────────────────────────────────────────────────────────────
+
+/** List all payments (admin only) */
+export const getAdminPayments = (status) =>
+  api.get(`/admin/payments${status ? `?status=${status}` : ''}`).then((r) => r.data)
+
+/** Issue a refund (admin only) */
+export const issueRefund = (payment_id, reason) =>
+  api.post('/payments/refund', { payment_id, reason }).then((r) => r.data)
+
+/** Download a CSV report — returns a Blob */
+export const exportReport = (type) =>
+  api.get(`/admin/reports/export?type=${type}`, { responseType: 'blob' }).then((r) => r.data)
+
+// ─── Enhanced Search helpers ──────────────────────────────────────────────────
+
+/** Search courses with all filters including rating */
+export const searchCourses = (params) =>
+  api.get('/search/courses', { params }).then((r) => r.data)
+
+/** Autocomplete course titles */
+export const autocompleteCourses = (q) =>
+  api.get('/search/autocomplete', { params: { q } }).then((r) => r.data)

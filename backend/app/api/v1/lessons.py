@@ -1,6 +1,8 @@
+import os
 import boto3
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, ConfigDict
@@ -16,11 +18,16 @@ from app.models.course import Module
 router = APIRouter(prefix="/lessons", tags=["Lessons"])
 settings = get_settings()
 
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
 
 from app.schemas.lesson import LessonCreate, LessonOut, PresignedUrlResponse, StreamUrlResponse
 
 
 # ---- S3 Helpers ------------------------------------------------------------
+
+def _use_mock_s3() -> bool:
+    return not settings.AWS_ACCESS_KEY_ID or not settings.AWS_SECRET_ACCESS_KEY
+
 
 def _s3_client():
     return boto3.client(
@@ -32,6 +39,8 @@ def _s3_client():
 
 
 def _generate_presigned_upload(s3_key: str, content_type: str, expires: int = 3600) -> str:
+    if _use_mock_s3():
+        return f"http://localhost:8000/api/v1/lessons/mock-upload?key={s3_key}"
     s3 = _s3_client()
     return s3.generate_presigned_url(
         "put_object",
@@ -41,6 +50,8 @@ def _generate_presigned_upload(s3_key: str, content_type: str, expires: int = 36
 
 
 def _generate_presigned_download(s3_key: str, expires: int = 900) -> str:
+    if _use_mock_s3():
+        return f"http://localhost:8000/api/v1/lessons/media?key={s3_key}"
     s3 = _s3_client()
     return s3.generate_presigned_url(
         "get_object",
@@ -76,6 +87,21 @@ async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_db)):
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return lesson
+
+
+@router.get("/{lesson_id}/quiz")
+async def get_lesson_quiz(
+    lesson_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the quiz attached to this lesson, or 404 if none exists."""
+    from app.models.quiz import Quiz
+    result = await db.execute(select(Quiz).where(Quiz.lesson_id == lesson_id))
+    quiz = result.scalar_one_or_none()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="No quiz for this lesson")
+    return quiz
 
 
 @router.post("/{lesson_id}/upload-url", response_model=PresignedUrlResponse)
@@ -153,3 +179,38 @@ async def delete_lesson(
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     await db.delete(lesson)
+
+
+@router.put("/mock-upload")
+async def mock_upload(key: str, request: Request):
+    """
+    Mock S3 upload endpoint. Saves the raw body of the request to local disk.
+    """
+    if not _use_mock_s3():
+        raise HTTPException(status_code=403, detail="Mock upload only available in offline mode")
+    
+    clean_key = key.replace("../", "").replace("..\\", "")
+    file_path = os.path.join(UPLOAD_DIR, clean_key)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    body_content = await request.body()
+    with open(file_path, "wb") as f:
+        f.write(body_content)
+        
+    return {"status": "success", "s3_key": key}
+
+
+@router.get("/media")
+async def get_mock_media(key: str):
+    """
+    Serves the locally uploaded mock files.
+    """
+    if not _use_mock_s3():
+        raise HTTPException(status_code=403, detail="Mock media only available in offline mode")
+    
+    clean_key = key.replace("../", "").replace("..\\", "")
+    file_path = os.path.join(UPLOAD_DIR, clean_key)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    return FileResponse(file_path)

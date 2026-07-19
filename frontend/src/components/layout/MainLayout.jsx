@@ -1,71 +1,156 @@
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
+import { useAuthStore, AUTH_STATUS, ROLES } from '../../store/authStore'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
+import { Menu, X, Sun, Moon } from 'lucide-react'
+import { useThemeStore } from '../../store/themeStore'
 
 export default function MainLayout() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, authStatus, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { theme, toggleTheme } = useThemeStore()
 
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout')
     } finally {
       logout()
+      setIsMobileMenuOpen(false)
       navigate('/login')
       toast.success('Logged out')
     }
   }
 
-  return (
-    <>
-      <nav className="navbar">
-        <div className="container navbar__inner">
-          <NavLink to="/" className="navbar__logo">LearnHub</NavLink>
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
+  const handleLinkClick = () => setIsMobileMenuOpen(false)
 
-          <div className="navbar__links">
-            <NavLink to="/courses" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}
+      data-auth-status={authStatus}
+      data-user-role={user?.role ?? 'none'}
+    >
+      <nav className="navbar">
+        <div className="container navbar__inner relative">
+          <NavLink to="/" className="navbar__logo" onClick={handleLinkClick}>Polaris</NavLink>
+
+          <div className="flex items-center gap-3 lg:hidden">
+            {/* Theme toggle — mobile */}
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            {/* Hamburger */}
+            <button
+              className="p-2 rounded-xl transition-colors"
+              style={{ color: 'var(--color-text-muted)' }}
+              onClick={toggleMobileMenu}
+              aria-label="Toggle Menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+
+          {/* Desktop & Mobile Links */}
+          <div className={`
+            navbar__links
+            ${isMobileMenuOpen
+              ? 'absolute top-full left-0 right-0 border-b p-6 flex flex-col items-start gap-4 z-50 animate-fade-in'
+              : 'hidden lg:flex lg:items-center lg:gap-6'
+            }
+          `}
+            style={isMobileMenuOpen ? { background: 'var(--color-surface)', borderColor: 'var(--color-border)' } : {}}
+          >
+            <NavLink
+              to="/courses"
+              className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
+              onClick={handleLinkClick}
+            >
               Courses
             </NavLink>
 
-            {isAuthenticated() ? (
+            {authStatus === AUTH_STATUS.AUTHENTICATED && user ? (
               <>
-                <NavLink to="/dashboard" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
+                  onClick={handleLinkClick}
+                >
                   Dashboard
                 </NavLink>
-                {user?.role === 'mentor' && (
-                  <NavLink to="/mentor" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
+                {user.role === ROLES.MENTOR && (
+                  <NavLink
+                    to="/mentor"
+                    className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
+                    onClick={handleLinkClick}
+                  >
                     My Courses
                   </NavLink>
                 )}
-                {user?.role === 'admin' && (
-                  <NavLink to="/admin" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
+                {user.role === ROLES.ADMIN && (
+                  <NavLink
+                    to="/admin"
+                    className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
+                    onClick={handleLinkClick}
+                  >
                     Admin
                   </NavLink>
                 )}
-                <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Logout</button>
+                <button
+                  className="btn btn-secondary btn-sm w-full lg:w-auto text-center mt-2 lg:mt-0"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <NavLink to="/login" className={({ isActive }) => `navbar__link ${isActive ? 'active' : ''}`}>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) => `navbar__link w-full lg:w-auto ${isActive ? 'active' : ''}`}
+                  onClick={handleLinkClick}
+                >
                   Login
                 </NavLink>
-                <NavLink to="/register" className="btn btn-primary btn-sm">Get Started</NavLink>
+                <NavLink
+                  to="/register"
+                  className="btn btn-primary btn-sm w-full lg:w-auto text-center mt-2 lg:mt-0"
+                  onClick={handleLinkClick}
+                >
+                  Get Started
+                </NavLink>
               </>
             )}
+
+            {/* Theme toggle — desktop (inside links row) */}
+            <button
+              className="theme-toggle hidden lg:flex"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
         </div>
       </nav>
 
-      <main>
+      <main className="flex-grow">
         <Outlet />
       </main>
 
-      <footer style={{ borderTop: '1px solid var(--color-border)', padding: '2rem 0', marginTop: '4rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+      <footer className="border-t py-8 mt-16 text-center text-sm" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
         <div className="container">
-          © 2025 LearnHub. All rights reserved.
+          © {new Date().getFullYear()} Polaris. All rights reserved.
         </div>
       </footer>
-    </>
+    </div>
   )
 }

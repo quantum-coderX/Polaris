@@ -61,10 +61,10 @@ def _build_certificate_pdf(
     c.setLineWidth(1)
     c.rect(1.8 * cm, 1.8 * cm, width - 3.6 * cm, height - 3.6 * cm, fill=0)
 
-    # Header — LearnHub logo text
+    # Header — Polaris logo text
     c.setFillColor(HexColor("#6c63ff"))
     c.setFont("Helvetica-Bold", 28)
-    c.drawCentredString(width / 2, height - 3.5 * cm, "LearnHub")
+    c.drawCentredString(width / 2, height - 3.5 * cm, "Polaris")
 
     c.setFillColor(HexColor("#a78bfa"))
     c.setFont("Helvetica", 12)
@@ -110,8 +110,23 @@ def _build_certificate_pdf(
     return buffer.getvalue()
 
 
+import os
+from app.api.v1.lessons import UPLOAD_DIR
+
+def _use_mock_s3() -> bool:
+    return not settings.AWS_ACCESS_KEY_ID or not settings.AWS_SECRET_ACCESS_KEY
+
+
 def _upload_to_s3(pdf_bytes: bytes, s3_key: str) -> str:
     """Upload bytes to S3 and return the S3 key."""
+    if _use_mock_s3():
+        clean_key = s3_key.replace("../", "").replace("..\\", "")
+        file_path = os.path.join(UPLOAD_DIR, clean_key)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "wb") as f:
+            f.write(pdf_bytes)
+        return s3_key
+
     s3 = boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -128,6 +143,8 @@ def _upload_to_s3(pdf_bytes: bytes, s3_key: str) -> str:
 
 
 def _get_presigned_url(s3_key: str) -> str:
+    if _use_mock_s3():
+        return f"http://localhost:8000/api/v1/lessons/media?key={s3_key}"
     s3 = boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -139,6 +156,7 @@ def _get_presigned_url(s3_key: str) -> str:
         Params={"Bucket": settings.AWS_S3_BUCKET, "Key": s3_key},
         ExpiresIn=3600,
     )
+
 
 
 from app.schemas.certificate import CertificateResponse
