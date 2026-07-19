@@ -1,7 +1,15 @@
-version: "3.9"
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Polaris — Microservice Architecture with Gamification (Redis)
+#  7 containers: postgres · redis · auth-service · payment-service · notif-service
+#                core-service · nginx-gateway · frontend
+#
+#  All traffic enters through Nginx on port 80.
+#  Individual service ports (8000–8003) are exposed only for direct debugging.
+# ═══════════════════════════════════════════════════════════════════════════════
 
 services:
-  # ── PostgreSQL ────────────────────────────────────────────────────────────
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: Polaris_postgres
@@ -18,26 +26,141 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - polaris_net
 
-  # ── FastAPI Backend ───────────────────────────────────────────────────────
-  backend:
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: Polaris_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - polaris_net
+
+  # ── Auth Service (:8001) ────────────────────────────────────────────────────
+  # Owns: /api/v1/auth/* and /api/v1/users/*
+  auth-service:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: Polaris_backend
+    container_name: Polaris_auth
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn auth_main:app --host 0.0.0.0 --port 8001 --reload
     ports:
-      - "8000:8000"
+      - "8001:8001"   # exposed for direct debug / Postman
+    volumes:
+      - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - polaris_net
+
+  # ── Payment Service (:8003) ─────────────────────────────────────────────────
+  # Owns: /api/v1/payments/*
+  # Cross-service: calls notif-service /internal/notify after confirmed payment
+  payment-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: Polaris_payment
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      NOTIF_SERVICE_URL: http://notif-service:8002
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn payment_main:app --host 0.0.0.0 --port 8003 --reload
+    ports:
+      - "8003:8003"   # Stripe webhooks must also be forwarded here in dev
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - polaris_net
 
-  # ── React Frontend ────────────────────────────────────────────────────────
+  # ── Notification Service (:8002) ────────────────────────────────────────────
+  # Owns: /api/v1/notifications/* (HTTP + WebSocket)
+  # Internal: POST /internal/notify  ← called by payment-service only
+  notif-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: Polaris_notif
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn notif_main:app --host 0.0.0.0 --port 8002 --reload
+    ports:
+      - "8002:8002"   # exposed for direct debug
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - polaris_net
+
+  # ── Core Service (:8000) ────────────────────────────────────────────────────
+  # Owns: courses · lessons · enrollments · reviews · Q&A · search
+  #       quizzes · certificates · admin
+  core-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: Polaris_core
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/Polaris
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"   # exposed for direct debug
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - polaris_net
+
+  # ── Nginx API Gateway (:80) ─────────────────────────────────────────────────
+  # Single public entry point. Routes by URL prefix to the correct service.
+  # /api/v1/auth|users → auth-service:8001
+  # /api/v1/payments   → payment-service:8003
+  # /api/v1/notif      → notif-service:8002
+  # /api/v1/*          → core-service:8000
+  # /                  → frontend:5173
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: Polaris_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - payment-service
+      - notif-service
+      - core-service
+      - frontend
+    networks:
+      - polaris_net
+
+  # ── React Frontend ──────────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -49,9 +172,17 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: http://localhost:8000/api/v1
-      VITE_WS_URL: ws://localhost:8000/api/v1
+      # All API calls now go through Nginx gateway on port 80
+      VITE_API_URL: http://localhost/api/v1
+      VITE_WS_URL: ws://localhost/api/v1
     command: npm run dev -- --host 0.0.0.0
+    networks:
+      - polaris_net
+
+networks:
+  polaris_net:
+    driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:

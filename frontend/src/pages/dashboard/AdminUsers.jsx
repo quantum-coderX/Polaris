@@ -48,8 +48,8 @@ export default function AdminUsers() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl md:text-3xl font-heading text-white mb-1">User Management</h1>
-      <p className="text-gray-400 mb-6">View and manage all platform users</p>
+      <h1 className="text-2xl md:text-3xl font-heading text-gray-900 dark:text-white mb-1">User Management</h1>
+      <p className="text-muted-var mb-6">View and manage all platform users</p>
 
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -118,12 +118,12 @@ export default function AdminUsers() {
                         {(user.full_name ?? 'U')[0].toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-semibold text-white text-sm">{user.full_name}</div>
-                        <div className="text-xs text-gray-500">@{user.username}</div>
+                        <div className="font-semibold text-gray-900 dark:text-white text-sm">{user.full_name}</div>
+                        <div className="text-xs text-muted-var">@{user.username}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="text-sm text-gray-400">{user.email}</td>
+                  <td className="text-sm text-muted-var">{user.email}</td>
                   <td>
                     <span className={`badge ${
                       user.role === 'admin' ? 'badge-warning' :

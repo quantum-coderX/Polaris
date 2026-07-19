@@ -25,3 +25,24 @@ class Review(Base):
 
     student = relationship("User", back_populates="reviews")
     course = relationship("Course", back_populates="reviews")
+
+
+def get_weighted_rating_expression(dialect_name: str):
+    from app.models.enrollment import Enrollment
+    from sqlalchemy import case, cast, Float
+
+    completion_weight = case(
+        (Enrollment.status == "refunded", 0.0),
+        (Enrollment.progress_percent >= 100.0, 1.5),
+        (Enrollment.progress_percent >= 50.0, 1.0),
+        else_=0.5
+    )
+
+    if dialect_name == "postgresql":
+        days_since = func.extract('epoch', func.now() - Review.created_at) / 86400.0
+        recency_weight = func.power(0.5, days_since / 365.0)
+    else:
+        recency_weight = cast(1.0, Float)
+
+    return completion_weight * recency_weight
+

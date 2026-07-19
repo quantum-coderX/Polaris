@@ -41,3 +41,8 @@ class User(Base):
     reviews = relationship("Review", back_populates="student")
     notifications = relationship("Notification", back_populates="user")
     qa_messages = relationship("QAMessage", back_populates="author")
+
+    # Gamification
+    streak = relationship("Streak", uselist=False, back_populates="user")
+    points_entries = relationship("PointsLedger", back_populates="user")
+    leaderboard_entries = relationship("LeaderboardEntry", back_populates="user")

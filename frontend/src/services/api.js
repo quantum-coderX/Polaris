@@ -1,12 +1,48 @@
 import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore, AUTH_STATUS } from '../store/authStore'
 
 const api = axios.create({
-  baseURL: '/api/v1',
-  withCredentials: true, // for httpOnly refresh cookie
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  withCredentials: true, // HttpOnly refresh cookie
 })
 
-// Attach access token to every request
+
+const AUTH_SKIP_PATHS = ['/auth/refresh', '/auth/login', '/auth/admin-login', '/auth/register', '/auth/logout']
+
+function shouldSkipTokenRefresh(url = '') {
+  return AUTH_SKIP_PATHS.some((path) => url.includes(path))
+}
+
+/** Single in-flight refresh — concurrent 401s await the same promise (request queue). */
+let refreshPromise = null
+
+async function refreshAccessToken() {
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  const store = useAuthStore.getState()
+  store.setAuthStatus(AUTH_STATUS.AUTHENTICATING)
+
+  refreshPromise = axios
+    .post('/api/v1/auth/refresh', {}, { withCredentials: true })
+    .then(({ data }) => {
+      const newToken = data.access_token
+      store.setAccessToken(newToken)
+      store.setAuthStatus(AUTH_STATUS.AUTHENTICATED)
+      return newToken
+    })
+    .catch((err) => {
+      store.logout()
+      throw err
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken
   if (token) {
@@ -15,52 +51,34 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Auto-refresh on 401
-let isRefreshing = false
-let failedQueue = []
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)))
-  failedQueue = []
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return api(originalRequest)
-          })
-          .catch(Promise.reject)
-      }
 
-      originalRequest._retry = true
-      isRefreshing = true
-
-      try {
-        const { data } = await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true })
-        const newToken = data.access_token
-        useAuthStore.getState().setAccessToken(newToken)
-        processQueue(null, newToken)
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
-        return api(originalRequest)
-      } catch (err) {
-        processQueue(err, null)
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
-        return Promise.reject(err)
-      } finally {
-        isRefreshing = false
-      }
+    if (
+      !originalRequest ||
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      shouldSkipTokenRefresh(originalRequest.url)
+    ) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
-  }
+
+    originalRequest._retry = true
+
+    try {
+      const newToken = await refreshAccessToken()
+      originalRequest.headers = originalRequest.headers ?? {}
+      originalRequest.headers.Authorization = `Bearer ${newToken}`
+      return api(originalRequest)
+    } catch (refreshError) {
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login?reason=session_expired')
+      }
+      return Promise.reject(refreshError)
+    }
+  },
 )
 
 export default api
@@ -124,3 +142,47 @@ export const generateCertificate = (courseId) =>
 /** Public verify endpoint (no auth) */
 export const verifyCertificate = (certId) =>
   api.get(`/certificates/verify/${certId}`).then((r) => r.data)
+
+// ─── Profile helpers ──────────────────────────────────────────────────────────
+
+/** Update the current user's profile */
+export const updateProfile = (data) =>
+  api.patch('/users/me', data).then((r) => r.data)
+
+/** Get the current user's full profile */
+export const getMyProfile = () =>
+  api.get('/auth/me').then((r) => r.data)
+
+// ─── Course Analytics helpers ─────────────────────────────────────────────────
+
+/** Get detailed analytics for a single course (mentor/admin only) */
+export const getCourseAnalytics = (courseId) =>
+  api.get(`/courses/${courseId}/analytics`).then((r) => r.data)
+
+/** Get mentor's aggregate analytics */
+export const getMentorAnalytics = (mentorId) =>
+  api.get(`/admin/mentors/${mentorId}/analytics`).then((r) => r.data)
+
+// ─── Admin helpers ────────────────────────────────────────────────────────────
+
+/** List all payments (admin only) */
+export const getAdminPayments = (status) =>
+  api.get(`/admin/payments${status ? `?status=${status}` : ''}`).then((r) => r.data)
+
+/** Issue a refund (admin only) */
+export const issueRefund = (payment_id, reason) =>
+  api.post('/payments/refund', { payment_id, reason }).then((r) => r.data)
+
+/** Download a CSV report — returns a Blob */
+export const exportReport = (type) =>
+  api.get(`/admin/reports/export?type=${type}`, { responseType: 'blob' }).then((r) => r.data)
+
+// ─── Enhanced Search helpers ──────────────────────────────────────────────────
+
+/** Search courses with all filters including rating */
+export const searchCourses = (params) =>
+  api.get('/search/courses', { params }).then((r) => r.data)
+
+/** Autocomplete course titles */
+export const autocompleteCourses = (q) =>
+  api.get('/search/autocomplete', { params: { q } }).then((r) => r.data)

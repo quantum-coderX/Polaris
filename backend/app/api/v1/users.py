@@ -30,6 +30,14 @@ async def list_users(
     return result.scalars().all()
 
 
+@router.get("/me", response_model=UserOut)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+):
+    """Return the currently authenticated user's profile."""
+    return current_user
+
+
 @router.get("/{user_id}", response_model=UserOut)
 async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == user_id))
