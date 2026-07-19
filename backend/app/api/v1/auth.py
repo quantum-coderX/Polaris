@@ -274,6 +274,7 @@ async def enable_2fa(
     user = result.scalar_one()
     user.totp_secret = secret
     db.add(user)
+    await db.commit()
 
     return TwoFASetupResponse(secret=secret, qr_code_uri=uri, qr_code_image_b64=qr_b64)
 
@@ -301,6 +302,7 @@ async def verify_2fa(
 
     user.is_2fa_enabled = True
     db.add(user)
+    await db.commit()
     return {"message": "2FA successfully enabled", "is_2fa_enabled": True}
 
 
@@ -323,4 +325,5 @@ async def disable_2fa(
     user.is_2fa_enabled = False
     user.totp_secret = None
     db.add(user)
+    await db.commit()
     return {"message": "2FA disabled", "is_2fa_enabled": False}
