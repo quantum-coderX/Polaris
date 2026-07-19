@@ -128,7 +128,7 @@ export default function Home() {
         <div className="container relative z-10 py-16 sm:py-24 md:py-28">
           <div className="max-w-3xl">
             <div className="hero__eyebrow mb-6">
-              🏛️ &nbsp;Est. 2024 · Trusted by 10,000+ Scholars
+              🏛️ &nbsp;Est. 2026 · Trusted by 10,000+ Scholars
             </div>
 
             <h1
