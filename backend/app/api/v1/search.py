@@ -7,14 +7,15 @@ built from title (A), short_description (B), and tags (C).
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, or_, func, and_, cast, Float
 from typing import Optional
 
 from sqlalchemy import literal_column
 
 from app.core.database import get_db
 from app.models.course import Course, CourseLevel, CourseStatus
-from app.models.review import Review
+from app.models.review import Review, get_weighted_rating_expression
+from app.models.enrollment import Enrollment
 
 router = APIRouter(prefix="/search", tags=["Search"])
 
@@ -116,10 +117,18 @@ async def search_courses(
         stmt = stmt.where(Course.is_free == is_free)
 
     if min_rating is not None:
+        weight_expr = get_weighted_rating_expression(dialect_name)
         avg_subq = (
             select(
                 Review.course_id,
-                func.avg(Review.rating).label("avg_rating"),
+                (func.sum(cast(Review.rating, Float) * weight_expr) / func.nullif(func.sum(weight_expr), 0)).label("avg_rating"),
+            )
+            .join(
+                Enrollment,
+                and_(
+                    Enrollment.course_id == Review.course_id,
+                    Enrollment.student_id == Review.student_id
+                )
             )
             .where(Review.is_approved == True)
             .group_by(Review.course_id)

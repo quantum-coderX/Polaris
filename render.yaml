@@ -1,0 +1,157 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Polaris — Render.com Deployment Blueprint
+#  Deploys 4 backend microservices as separate Web Services on Render free tier.
+#
+#  BEFORE DEPLOYING:
+#  1. Create a Supabase project → copy the connection string
+#  2. Create an Upstash Redis → copy the Redis URL
+#  3. Set all env vars in Render dashboard (or via this file's envVars section)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Core Service (courses, lessons, enrollments, search, quizzes, admin) ─────
+  - type: web
+    name: polaris-core
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: Polaris API
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false   # Set this in Render dashboard
+      - key: ADMIN_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false   # Supabase PostgreSQL connection string
+      - key: REDIS_URL
+        sync: false   # Upstash Redis URL
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "15"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        value: polaris-media-642529144580-us-east-1-an
+      - key: AWS_REGION
+        value: us-east-1
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: INTERNAL_AUTH_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false   # Set to your Vercel frontend URL e.g. ["https://polaris.vercel.app"]
+      - key: FRONTEND_URL
+        sync: false   # Your Vercel URL e.g. https://polaris.vercel.app
+      - key: NOTIF_SERVICE_URL
+        sync: false   # https://polaris-notif.onrender.com
+
+  # ── Auth Service (/api/v1/auth/*, /api/v1/users/*) ───────────────────────────
+  - type: web
+    name: polaris-auth
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: uvicorn auth_main:app --host 0.0.0.0 --port 8001
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: Polaris Auth
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "15"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: INTERNAL_AUTH_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAILS_FROM
+        value: noreply@polaris.io
+
+  # ── Payment Service (/api/v1/payments/*) ─────────────────────────────────────
+  - type: web
+    name: polaris-payment
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: uvicorn payment_main:app --host 0.0.0.0 --port 8003
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: Polaris Payment
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: INTERNAL_AUTH_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: NOTIF_SERVICE_URL
+        sync: false   # https://polaris-notif.onrender.com
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── Notification Service (/api/v1/notifications/*, WebSocket) ────────────────
+  - type: web
+    name: polaris-notif
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    startCommand: uvicorn notif_main:app --host 0.0.0.0 --port 8002
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: Polaris Notif
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: INTERNAL_AUTH_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

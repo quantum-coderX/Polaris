@@ -49,3 +49,11 @@ htmlcov/
 # SQLite test databases
 *.db
 *.sqlite
+
+# Generated certificate PDFs (local mock storage — not for version control)
+backend/app/uploads/
+
+# Frontend env files
+frontend/.env
+frontend/.env.local
+frontend/.env.production

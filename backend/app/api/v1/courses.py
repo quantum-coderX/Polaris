@@ -232,7 +232,7 @@ async def course_analytics(
     """
     from app.models.enrollment import Enrollment, EnrollmentStatus, LessonProgress
     from app.models.payment import Payment, PaymentStatus
-    from app.models.review import Review
+    from app.models.review import Review, get_weighted_rating_expression
 
     result = await db.execute(select(Course).where(Course.id == course_id))
     course = result.scalar_one_or_none()
@@ -265,13 +265,26 @@ async def course_analytics(
             Payment.status == PaymentStatus.completed,
         )
     )).scalar() or 0
+    from sqlalchemy import and_, cast, Float, case
+    dialect_name = db.bind.dialect.name
+    weight_expr = get_weighted_rating_expression(dialect_name)
 
     avg_rating = (await db.execute(
-        select(func.avg(Review.rating)).where(
+        select(
+            func.coalesce(func.sum(cast(Review.rating, Float) * weight_expr) / func.nullif(func.sum(weight_expr), 0), 0.0)
+        )
+        .join(
+            Enrollment,
+            and_(
+                Enrollment.course_id == Review.course_id,
+                Enrollment.student_id == Review.student_id
+            )
+        )
+        .where(
             Review.course_id == course_id,
             Review.is_approved == True,
         )
-    )).scalar() or 0
+    )).scalar() or 0.0
 
     total_reviews = (await db.execute(
         select(func.count(Review.id)).where(

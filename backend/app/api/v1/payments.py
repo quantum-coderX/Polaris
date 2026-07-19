@@ -152,7 +152,8 @@ async def _handle_checkout_completed(
 
     email_payload: dict | None = None
 
-    async with db.begin():
+    async def run_updates():
+        nonlocal payment
         result = await db.execute(
             select(Payment).where(Payment.id == payment.id).with_for_update()
         )
@@ -177,6 +178,12 @@ async def _handle_checkout_completed(
         db.add(enrollment)
         await db.flush()
         payment.enrollment_id = enrollment.id
+
+    if db.in_transaction():
+        await run_updates()
+    else:
+        async with db.begin():
+            await run_updates()
 
     student_result = await db.execute(select(User).where(User.id == user_id))
     student = student_result.scalar_one_or_none()
@@ -226,7 +233,8 @@ async def _handle_dispute_created(dispute_obj: dict, db: AsyncSession) -> None:
         )
         return
 
-    async with db.begin():
+    async def run_updates():
+        nonlocal payment
         result = await db.execute(
             select(Payment).where(Payment.id == payment.id).with_for_update()
         )
@@ -244,6 +252,12 @@ async def _handle_dispute_created(dispute_obj: dict, db: AsyncSession) -> None:
             enrollment = enroll_result.scalar_one_or_none()
             if enrollment:
                 enrollment.status = EnrollmentStatus.suspended
+
+    if db.in_transaction():
+        await run_updates()
+    else:
+        async with db.begin():
+            await run_updates()
 
     logger.info(
         "Payment %s marked disputed; enrollment %s suspended",
@@ -282,7 +296,8 @@ async def _handle_charge_refunded(
 
     email_payload: dict | None = None
 
-    async with db.begin():
+    async def run_updates():
+        nonlocal payment
         result = await db.execute(
             select(Payment).where(Payment.id == payment.id).with_for_update()
         )
@@ -304,6 +319,12 @@ async def _handle_charge_refunded(
             enrollment = enroll_result.scalar_one_or_none()
             if enrollment:
                 enrollment.status = EnrollmentStatus.refunded
+
+    if db.in_transaction():
+        await run_updates()
+    else:
+        async with db.begin():
+            await run_updates()
 
     student_result = await db.execute(select(User).where(User.id == payment.student_id))
     student = student_result.scalar_one_or_none()

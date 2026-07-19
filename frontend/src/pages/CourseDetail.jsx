@@ -46,6 +46,12 @@ export default function CourseDetail() {
     enabled: !!course?.id,
   })
 
+  const { data: ratingStats } = useQuery({
+    queryKey: ['ratingStats', course?.id],
+    queryFn: () => api.get(`/reviews/course/${course.id}/stats`).then(r => r.data).catch(() => null),
+    enabled: !!course?.id,
+  })
+
   const { data: enrollment } = useQuery({
     queryKey: ['enrollment', course?.id],
     queryFn: () => api.get(`/enrollments/${course.id}`).then(r => r.data).catch(() => null),
@@ -82,8 +88,8 @@ export default function CourseDetail() {
     }
   }
 
-  const avgRating = reviews?.length
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+  const avgRating = ratingStats?.total_reviews > 0
+    ? ratingStats.average_rating.toFixed(1)
     : null
 
   if (isLoading) return <LoadingScreen />
@@ -116,7 +122,7 @@ export default function CourseDetail() {
             <div className="flex flex-wrap gap-6 mt-6">
               <Stat icon={<Clock size={16} />} value={`${course?.total_duration_minutes} min`} label="Total Duration" />
               <Stat icon={<BookOpen size={16} />} value={`${course?.total_lessons} lessons`} label="Lessons" />
-              {avgRating && <Stat icon={<Star size={16} className="text-gold fill-current" />} value={avgRating} label={`${reviews.length} reviews`} />}
+              {avgRating && <Stat icon={<Star size={16} className="text-gold fill-current" />} value={avgRating} label={`${ratingStats?.total_reviews || reviews?.length || 0} reviews`} />}
             </div>
           </div>
 
@@ -219,7 +225,7 @@ export default function CourseDetail() {
 
           {/* Reviews List */}
           {reviews?.length > 0 && (
-            <Section title={`Student Reviews (${reviews.length})`}>
+            <Section title={`Student Reviews (${ratingStats?.total_reviews || reviews.length})`}>
               <div className="flex flex-col gap-4">
                 {reviews.slice(0, 5).map(review => (
                   <div key={review.id} className="p-5 rounded-xl bg-surface border border-border">

@@ -367,7 +367,10 @@ function QAPanel({ courseId, accessToken }) {
   useEffect(() => {
     if (!courseId || !accessToken) return
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const wsUrl = `${protocol}://${window.location.host}/api/v1/qa/ws/${courseId}?token=${accessToken}`
+    const wsBase = import.meta.env.VITE_WS_URL
+      ? import.meta.env.VITE_WS_URL
+      : `${protocol}://${window.location.host}`
+    const wsUrl = `${wsBase}/api/v1/qa/ws/${courseId}?token=${accessToken}`
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 

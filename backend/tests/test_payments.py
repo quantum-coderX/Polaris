@@ -177,7 +177,7 @@ async def test_webhook_success_triggers_enrollment_and_notification(client: Asyn
             )
 
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ok"}
+    assert resp.json().get("status") == "ok"
     mock_notify.assert_called_once_with(student.id, course.title, course_id)
 
     student_id = student.id

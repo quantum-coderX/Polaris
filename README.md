@@ -813,49 +813,76 @@ Covers all 15 tables with indexes, foreign keys, and PostgreSQL enum types.
 
 ---
 
+
 ## ☁️ Deployment
 
-### Railway (Recommended)
+### 🆓 Free Tier Stack (Recommended for Demo / Mini Project)
+
+The project is pre-configured to deploy across purpose-built free platforms at **zero cost**:
+
+| Layer | Platform | Config file |
+|---|---|---|
+| **Frontend (React)** | [Vercel](https://vercel.com) | `frontend/vercel.json` |
+| **Backend (4 microservices)** | [Render](https://render.com) | `render.yaml` |
+| **PostgreSQL** | [Supabase](https://supabase.com) | `DATABASE_URL` env var |
+| **Redis** | [Upstash](https://upstash.com) | `REDIS_URL` env var |
+| **File Storage** | AWS S3 | Already configured |
+| **Payments** | Stripe Sandbox | Already configured |
+
+#### Step 1 — Supabase (Database)
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **Settings → Database → URI** and copy the connection string
+3. Replace `postgresql://` with `postgresql+asyncpg://`
+
+#### Step 2 — Upstash (Redis)
+1. Create a database at [upstash.com](https://upstash.com) in `us-east-1`
+2. Copy the **Redis URL** (`rediss://...`)
+
+#### Step 3 — Render (Backend)
+1. Push repo to GitHub
+2. Go to [render.com](https://render.com) → **New → Blueprint** → connect repo
+3. Render auto-detects `render.yaml` and creates all 4 services
+4. Fill in the `sync: false` environment variables in the dashboard:
+   - `DATABASE_URL`, `REDIS_URL`, `SECRET_KEY`, `ADMIN_SECRET`
+   - `INTERNAL_AUTH_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+   - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+   - `CORS_ORIGINS` → `["https://your-app.vercel.app"]`
+   - `NOTIF_SERVICE_URL` → `https://polaris-notif.onrender.com`
+5. After first deploy, run migrations from the Render shell:
+   ```bash
+   alembic upgrade head
+   ```
+
+#### Step 4 — Vercel (Frontend)
+1. Go to [vercel.com](https://vercel.com) → **New Project** → import repo
+2. Set **Root Directory** → `frontend`
+3. Add environment variables:
+   ```
+   VITE_API_URL = https://polaris-core.onrender.com/api/v1
+   VITE_WS_URL  = wss://polaris-core.onrender.com
+   ```
+4. Deploy ✅
+
+---
+
+### 🖥️ Self-Hosted: AWS EC2
+
+For production-grade hosting with full control:
 
 ```bash
-railway login
-railway init
-railway up
-# Set environment variables in Railway dashboard
-```
-
-Railway auto-detects the Dockerfile and builds the image. Add a PostgreSQL plugin and Redis plugin from the dashboard.
-
-### Render
-
-1. Create a new Web Service → connect GitHub repo → `./backend` root
-2. Set build command: `pip install -r requirements.txt`
-3. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Add PostgreSQL and Redis as add-ons
-
-### AWS EC2
-
-```bash
-# On EC2 instance (Ubuntu 22.04)
-sudo apt-get install -y docker.io docker-compose-plugin
+# On EC2 instance (Ubuntu 24.04), t3.medium minimum
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker ubuntu && newgrp docker
 git clone <repo> && cd final-project
 cp .env.example .env && nano .env   # fill in production values
-docker-compose up -d
+docker compose up -d --build
 ```
 
-**Recommended:** Put an Nginx reverse proxy in front for SSL termination:
-```nginx
-server {
-    listen 443 ssl;
-    server_name api.polaris.io;
-
-    location / {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-    }
-}
+Update `VITE_API_URL` / `VITE_WS_URL` in `docker-compose.yml` to your EC2 public IP.
+Add SSL with Certbot once you have a domain:
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
 ```
 
 ---

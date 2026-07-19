@@ -141,9 +141,10 @@ async def update_progress(
     )
     lp = result.scalar_one_or_none()
     if not lp:
-        lp = LessonProgress(enrollment_id=enrollment.id, lesson_id=body.lesson_id)
+        lp = LessonProgress(enrollment_id=enrollment.id, lesson_id=body.lesson_id, watch_time_seconds=0)
 
-    lp.watch_time_seconds = max(lp.watch_time_seconds, body.watch_time_seconds)
+    current_watch_time = lp.watch_time_seconds if lp.watch_time_seconds is not None else 0
+    lp.watch_time_seconds = max(current_watch_time, body.watch_time_seconds)
     was_completed_before = lp.is_completed
     lp.is_completed = body.is_completed
     if body.is_completed and not lp.completed_at:

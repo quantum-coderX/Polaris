@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_, cast, Float
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
@@ -8,7 +8,7 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_admin
 from app.models.user import User
-from app.models.review import Review
+from app.models.review import Review, get_weighted_rating_expression
 from app.models.enrollment import Enrollment, EnrollmentStatus
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
@@ -72,15 +72,29 @@ async def get_course_reviews(
 
 @router.get("/course/{course_id}/stats")
 async def get_course_rating_stats(course_id: int, db: AsyncSession = Depends(get_db)):
+    dialect_name = db.bind.dialect.name
+    weight_expr = get_weighted_rating_expression(dialect_name)
+
     result = await db.execute(
-        select(func.avg(Review.rating), func.count(Review.id)).where(
+        select(
+            func.coalesce(func.sum(cast(Review.rating, Float) * weight_expr) / func.nullif(func.sum(weight_expr), 0), 0.0),
+            func.count(Review.id)
+        )
+        .join(
+            Enrollment,
+            and_(
+                Enrollment.course_id == Review.course_id,
+                Enrollment.student_id == Review.student_id
+            )
+        )
+        .where(
             Review.course_id == course_id,
             Review.is_approved == True,
         )
     )
-    avg_rating, total = result.one()
+    weighted_avg, total = result.one()
     return {
-        "average_rating": round(float(avg_rating or 0), 2),
+        "average_rating": round(float(weighted_avg or 0), 2),
         "total_reviews": total,
     }
 
