@@ -1,0 +1,2 @@
+# Exclude local development docker configurations from Vercel build
+Dockerfile
