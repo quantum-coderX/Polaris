@@ -221,8 +221,10 @@ export default function CourseEditor() {
       await axios.put(data.upload_url, file, {
         headers: { 'Content-Type': file.type },
         onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          setUploadProgress(prev => ({ ...prev, [lessonId]: percent }))
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(prev => ({ ...prev, [lessonId]: percent }))
+          }
         }
       })
 
@@ -233,6 +235,7 @@ export default function CourseEditor() {
       refetchModules()
     } catch (err) {
       console.error(err)
+      setUploadProgress(prev => ({ ...prev, [lessonId]: undefined }))
       setUploadError(prev => ({
         ...prev,
         [lessonId]: err?.response?.data?.detail || 'Upload failed. Check your internet connection.'

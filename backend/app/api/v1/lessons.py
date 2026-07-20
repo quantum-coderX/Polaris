@@ -38,8 +38,13 @@ def _s3_client():
     )
 
 
-def _generate_presigned_upload(s3_key: str, content_type: str, expires: int = 3600) -> str:
+def _generate_presigned_upload(s3_key: str, content_type: str, request: Request = None, expires: int = 3600) -> str:
     if _use_mock_s3():
+        if request:
+            scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+            host = request.url.netloc
+            base_url = f"{scheme}://{host}"
+            return f"{base_url}/api/v1/lessons/mock-upload?key={s3_key}"
         return f"http://localhost:8000/api/v1/lessons/mock-upload?key={s3_key}"
     s3 = _s3_client()
     return s3.generate_presigned_url(
@@ -107,6 +112,7 @@ async def get_lesson_quiz(
 @router.post("/{lesson_id}/upload-url", response_model=PresignedUrlResponse)
 async def get_upload_url(
     lesson_id: int,
+    request: Request,
     content_type: str = Query(..., description="MIME type e.g. video/mp4, application/pdf"),
     current_user: User = Depends(require_mentor),
     db: AsyncSession = Depends(get_db),
@@ -128,7 +134,7 @@ async def get_upload_url(
     }
     ext = ext_map.get(content_type, "bin")
     s3_key = f"lessons/{lesson_id}/content.{ext}"
-    upload_url = _generate_presigned_upload(s3_key, content_type)
+    upload_url = _generate_presigned_upload(s3_key, content_type, request=request)
     return {"upload_url": upload_url, "s3_key": s3_key, "content_type": content_type}
 
 
