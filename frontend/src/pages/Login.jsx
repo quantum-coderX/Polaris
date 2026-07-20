@@ -16,6 +16,8 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [authAlert, setAuthAlert] = useState(null)
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [totpCode, setTotpCode] = useState('')
   const { login } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,13 +46,29 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { data } = await api.post('/auth/login', form)
-      const { data: user } = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${data.access_token}` },
-      })
-      login(user, data.access_token)
-      toast.success(`Welcome back, ${user.full_name}!`)
-      navigate(user.role === 'admin' ? '/admin' : user.role === 'mentor' ? '/mentor' : '/dashboard')
+      if (requires2FA) {
+        const { data } = await api.post('/auth/2fa/login', { email: form.email, code: totpCode })
+        const { data: user } = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        })
+        login(user, data.access_token)
+        toast.success(`Welcome back, ${user.full_name}!`)
+        navigate(user.role === 'admin' ? '/admin' : user.role === 'mentor' ? '/mentor' : '/dashboard')
+      } else {
+        const { data } = await api.post('/auth/login', form)
+        if (data.requires_2fa) {
+          setRequires2FA(true)
+          toast('Please enter your authenticator code.', { icon: '🛡️' })
+          return
+        }
+        
+        const { data: user } = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        })
+        login(user, data.access_token)
+        toast.success(`Welcome back, ${user.full_name}!`)
+        navigate(user.role === 'admin' ? '/admin' : user.role === 'mentor' ? '/mentor' : '/dashboard')
+      }
     } catch (err) {
       toast.error(err.response?.data?.detail ?? 'Login failed')
     } finally {
@@ -83,39 +101,58 @@ export default function Login() {
         )}
 
         <form id="login-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="form-group">
-            <label className="form-label" htmlFor="login-email">Email</label>
-            <div className="relative">
-              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+          {!requires2FA ? (
+            <>
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-email">Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    className="form-input pl-10"
+                    placeholder="you@example.com"
+                    required
+                    value={form.email}
+                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-password">Password</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+                  <input
+                    id="login-password"
+                    type="password"
+                    className="form-input pl-10"
+                    placeholder="••••••••"
+                    required
+                    value={form.password}
+                    onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="form-group">
+              <label className="form-label text-center block mb-2" htmlFor="login-totp">Authenticator Code</label>
               <input
-                id="login-email"
-                type="email"
-                className="form-input pl-10"
-                placeholder="you@example.com"
+                id="login-totp"
+                type="text"
+                className="form-input text-center text-2xl tracking-[0.5em] font-mono py-4"
+                placeholder="000000"
                 required
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                maxLength={6}
+                value={totpCode}
+                onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                autoFocus
               />
             </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="login-password">Password</label>
-            <div className="relative">
-              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
-              <input
-                id="login-password"
-                type="password"
-                className="form-input pl-10"
-                placeholder="••••••••"
-                required
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              />
-            </div>
-          </div>
+          )}
 
           <button id="login-submit" type="submit" className="btn btn-primary btn-full btn-lg mt-2" disabled={loading}>
-            {loading ? <span className="spinner w-5 h-5 border-2" /> : 'Sign In'}
+            {loading ? <span className="spinner w-5 h-5 border-2" /> : requires2FA ? 'Verify Code' : 'Sign In'}
           </button>
         </form>
 

@@ -25,6 +25,12 @@ async def get_current_user(
         payload = decode_token(token)
         if payload.get("type") != "access":
             raise credentials_exception
+        if payload.get("role") == "pre_auth":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="2FA verification required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         user_id: int = int(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         raise credentials_exception
