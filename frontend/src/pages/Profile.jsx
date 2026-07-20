@@ -107,7 +107,7 @@ export default function Profile() {
             ) : (
               <div
                 className="w-24 h-24 rounded-2xl flex items-center justify-center font-bold text-2xl text-white"
-                style={{ background: 'linear-gradient(135deg,#6c63ff,#a78bfa)' }}
+                style={{ background: 'var(--gradient-hero)' }}
               >
                 {initials}
               </div>
@@ -160,7 +160,7 @@ export default function Profile() {
               Full Name
             </label>
             <input
-              className="input w-full"
+              className="form-input w-full"
               value={form.full_name}
               onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
               placeholder="Your full name"
@@ -179,7 +179,7 @@ export default function Profile() {
                 style={{ color: 'var(--color-text-muted)' }}
               />
               <input
-                className="input w-full pl-9"
+                className="form-input w-full pl-9"
                 value={form.username}
                 onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                 placeholder="username"
@@ -193,7 +193,7 @@ export default function Profile() {
               Bio
             </label>
             <textarea
-              className="input w-full resize-none"
+              className="form-input w-full resize-none"
               rows={3}
               value={form.bio}
               onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
@@ -207,7 +207,7 @@ export default function Profile() {
               Avatar URL
             </label>
             <input
-              className="input w-full"
+              className="form-input w-full"
               value={form.avatar_url}
               onChange={e => handleAvatarChange(e.target.value)}
               placeholder="https://example.com/your-photo.jpg"
@@ -225,6 +225,86 @@ export default function Profile() {
             >
               <Save size={16} />
               {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Password Change */}
+      <div className="card p-6 mb-6">
+        <h2
+          className="text-base font-heading font-bold mb-5 flex items-center gap-2"
+          style={{ color: 'var(--color-text)' }}
+        >
+          <KeyRound size={16} /> Change Password
+        </h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (pwForm.next !== pwForm.confirm) {
+              toast.error('New passwords do not match')
+              return
+            }
+            if (pwForm.next.length < 8) {
+              toast.error('Password must be at least 8 characters')
+              return
+            }
+            api.post('/auth/change-password', { current_password: pwForm.current, new_password: pwForm.next })
+              .then(() => {
+                toast.success('Password updated successfully')
+                setPwForm({ current: '', next: '', confirm: '' })
+              })
+              .catch(err => toast.error(err?.response?.data?.detail || 'Password change failed'))
+          }}
+          className="flex flex-col gap-4"
+        >
+          <div>
+            <label className="form-label">Current Password</label>
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'}
+                className="form-input pr-10"
+                value={pwForm.current}
+                onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
+                placeholder="Enter current password"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted"
+                onClick={() => setShowPw(v => !v)}
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+              >
+                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="form-label">New Password</label>
+            <input
+              type="password"
+              className="form-input"
+              value={pwForm.next}
+              onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))}
+              placeholder="Min. 8 characters"
+              minLength={8}
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label">Confirm New Password</label>
+            <input
+              type="password"
+              className="form-input"
+              value={pwForm.confirm}
+              onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
+              placeholder="Confirm new password"
+              required
+            />
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" className="btn btn-secondary">
+              <KeyRound size={16} /> Update Password
             </button>
           </div>
         </form>
@@ -287,7 +367,7 @@ export default function Profile() {
               </label>
               <div className="flex gap-3">
                 <input
-                  className="input flex-1 text-center text-lg font-mono tracking-widest"
+                  className="form-input flex-1 text-center text-lg font-mono tracking-widest"
                   maxLength={6}
                   value={totpCode}
                   onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}

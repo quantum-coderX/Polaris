@@ -119,9 +119,15 @@ export default function App() {
           <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.MENTOR, ROLES.ADMIN]}><DashboardLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/learn/:courseId/:lessonId?" element={<Learn />} />
             <Route path="/checkout/:courseId" element={<Checkout />} />
           </Route>
+
+          {/* Learn — full-screen immersive player (no dashboard chrome) */}
+          <Route path="/learn/:courseId/:lessonId?" element={
+            <ProtectedRoute roles={[ROLES.STUDENT, ROLES.MENTOR, ROLES.ADMIN]}>
+              <Learn />
+            </ProtectedRoute>
+          } />
 
           {/* Mentor protected */}
           <Route element={<ProtectedRoute roles={[ROLES.MENTOR, ROLES.ADMIN]}><DashboardLayout /></ProtectedRoute>}>

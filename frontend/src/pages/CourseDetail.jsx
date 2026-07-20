@@ -98,10 +98,8 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
-      {/* Hero — library-tinted header */}
-      <div className="relative border-b py-12 md:py-16 overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
-        {/* Subtle bg tint */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg) 100%)' }} />
+      {/* Hero */}
+      <div className="course-hero">
         <div className="container relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left info column */}
           <div className="lg:col-span-2">
@@ -109,14 +107,14 @@ export default function CourseDetail() {
               <span className="badge badge-primary">
                 {course?.level}
               </span>
-              <span className="badge bg-surface2 text-gray-400">
+              <span className="badge" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}>
                 {course?.language}
               </span>
             </div>
-            <h1 className="text-2xl md:text-4xl font-heading mb-4 text-white leading-tight">
+            <h1 className="text-2xl md:text-4xl font-heading mb-4 text-theme leading-tight">
               {course?.title}
             </h1>
-            <p className="text-gray-400 mb-6 leading-relaxed text-base md:text-lg">
+            <p className="text-theme-muted mb-6 leading-relaxed text-base md:text-lg">
               {course?.short_description}
             </p>
             <div className="flex flex-wrap gap-6 mt-6">
@@ -163,7 +161,7 @@ export default function CourseDetail() {
                   )}
                 </button>
               )}
-              <p className="text-gray-400 text-center text-xs mt-3">
+              <p className="text-theme-muted text-center text-xs mt-3">
                 30-day money-back guarantee
               </p>
             </div>
@@ -192,15 +190,15 @@ export default function CourseDetail() {
           {/* Curriculum Accordion */}
           <Section title="Course Curriculum">
             {!modules?.length ? (
-              <p className="text-gray-400">No lessons uploaded yet.</p>
+              <p className="text-theme-muted">No lessons uploaded yet.</p>
             ) : (
               modules.map((mod, idx) => (
                 <div key={mod.id} className="border border-border rounded-xl mb-3 overflow-hidden bg-surface">
                   <button
                     onClick={() => toggleModule(idx)}
-                    className="w-full flex justify-between items-center p-4 hover:bg-surface2 text-left text-white border-0 transition-colors focus:outline-none"
+                    className="w-full flex justify-between items-center p-4 hover:bg-surface2 text-left text-theme border-0 transition-colors focus:outline-none"
                   >
-                    <span className="fontWeight-600 font-bold">{mod.title}</span>
+                    <span className="font-bold">{mod.title}</span>
                     {expandedModules.has(idx) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {expandedModules.has(idx) && mod.lessons?.map(lesson => (
@@ -208,13 +206,13 @@ export default function CourseDetail() {
                       <div className="flex items-center gap-2">
                         {lesson.lesson_type === 'video'
                           ? <PlayCircle size={14} className="text-primary" />
-                          : <FileText size={14} className="text-gray-400" />}
-                        <span className="text-sm">{lesson.title}</span>
+                          : <FileText size={14} className="text-theme-muted" />}
+                        <span className="text-sm text-theme">{lesson.title}</span>
                         {lesson.is_preview && <span className="text-[10px] text-secondary font-bold uppercase ml-2 bg-secondary/15 px-1.5 py-0.5 rounded">Preview</span>}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">{lesson.duration_minutes}m</span>
-                        {!enrollment && !lesson.is_preview && <Lock size={12} className="text-gray-500" />}
+                        <span className="text-xs text-theme-muted">{lesson.duration_minutes}m</span>
+                        {!enrollment && !lesson.is_preview && <Lock size={12} className="text-theme-sub" />}
                       </div>
                     </div>
                   ))}
@@ -232,11 +230,11 @@ export default function CourseDetail() {
                     <div className="flex justify-between mb-2">
                       <div className="flex gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={14} className={i < review.rating ? 'text-gold fill-current' : 'text-gray-600'} />
+                          <Star key={i} size={14} className={i < review.rating ? 'text-gold fill-current' : 'text-theme-sub'} />
                         ))}
                       </div>
                     </div>
-                    <p className="text-sm leading-relaxed text-gray-300">{review.body}</p>
+                    <p className="text-sm leading-relaxed text-theme-muted">{review.body}</p>
                   </div>
                 ))}
               </div>
@@ -248,12 +246,12 @@ export default function CourseDetail() {
         <div className="lg:col-span-1">
           {course?.requirements && (
             <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="mb-4 text-base font-bold text-white">Requirements</h3>
+              <h3 className="mb-4 text-base font-bold text-theme">Requirements</h3>
               <div className="flex flex-col gap-2">
                 {parseJsonOrSplit(course.requirements).map((req, i) => (
                   <div key={i} className="flex gap-2 text-sm">
                     <span className="text-primary font-bold">•</span>
-                    <span className="text-gray-400">{req}</span>
+                    <span className="text-theme-muted">{req}</span>
                   </div>
                 ))}
               </div>
@@ -270,8 +268,8 @@ function Stat({ icon, value, label }) {
     <div className="flex items-center gap-3">
       <span className="text-primary">{icon}</span>
       <div>
-        <div className="font-bold text-white">{value}</div>
-        <div className="text-xs text-gray-400">{label}</div>
+        <div className="font-bold text-theme">{value}</div>
+        <div className="text-xs text-theme-muted">{label}</div>
       </div>
     </div>
   )
@@ -280,7 +278,7 @@ function Stat({ icon, value, label }) {
 function Section({ title, children }) {
   return (
     <div className="mb-10">
-      <h2 className="text-xl font-heading mb-4 text-white border-b border-border/50 pb-2">{title}</h2>
+      <h2 className="text-xl font-heading mb-4 text-theme border-b border-border/50 pb-2">{title}</h2>
       {children}
     </div>
   )

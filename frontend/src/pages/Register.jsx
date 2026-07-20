@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { User, AtSign, Mail, Lock, GraduationCap, Users } from 'lucide-react'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -15,7 +16,6 @@ export default function Register() {
     setLoading(true)
     try {
       await api.post('/auth/register', form)
-      // Auto-login after register
       const { data } = await api.post('/auth/login', { email: form.email, password: form.password })
       const { data: user } = await api.get('/auth/me', {
         headers: { Authorization: `Bearer ${data.access_token}` },
@@ -31,38 +31,69 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6">
-      <div className="card w-full max-w-lg animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="font-heading text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Create Account
-          </div>
-          <p className="text-gray-400 text-sm mt-2">Join 10,000+ learners today</p>
+    <div className="auth-page">
+      <div className="auth-card auth-card--wide">
+        <div className="auth-brand">
+          <div className="auth-brand__logo">Polaris</div>
+          <div className="auth-brand__title">Create Your Account</div>
+          <p className="auth-brand__sub">Join thousands of learners and start growing today</p>
         </div>
 
         <form id="register-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="form-group">
             <label className="form-label" htmlFor="reg-name">Full Name</label>
-            <input id="reg-name" type="text" className="form-input" placeholder="Jane Doe" required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+            <div className="relative">
+              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input id="reg-name" type="text" className="form-input pl-10" placeholder="Jane Doe" required value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="reg-username">Username</label>
-            <input id="reg-username" type="text" className="form-input" placeholder="janedoe" required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} />
+            <div className="relative">
+              <AtSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input id="reg-username" type="text" className="form-input pl-10" placeholder="janedoe" required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} />
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="reg-email">Email</label>
-            <input id="reg-email" type="email" className="form-input" placeholder="you@example.com" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            <div className="relative">
+              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input id="reg-email" type="email" className="form-input pl-10" placeholder="you@example.com" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="reg-password">Password</label>
-            <input id="reg-password" type="password" className="form-input" placeholder="Min. 8 characters" required minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+            <div className="relative">
+              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input id="reg-password" type="password" className="form-input pl-10" placeholder="Min. 8 characters" required minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+            </div>
           </div>
+
+          {/* Role selector — LMS-specific */}
           <div className="form-group">
-            <label className="form-label" htmlFor="reg-role">I want to</label>
-            <select id="reg-role" className="form-select" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
-              <option value="student">Learn (Student)</option>
-              <option value="mentor">Teach (Become a Mentor)</option>
-            </select>
+            <label className="form-label">I want to</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className={`p-4 rounded-xl border-2 text-left transition-all ${form.role === 'student' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                style={{ background: form.role === 'student' ? 'rgba(139,92,246,0.06)' : 'var(--color-surface-2)' }}
+                onClick={() => setForm(f => ({ ...f, role: 'student' }))}
+              >
+                <GraduationCap size={20} className={form.role === 'student' ? 'text-primary' : 'text-theme-muted'} />
+                <div className="font-semibold text-sm mt-2 text-theme">Learn</div>
+                <div className="text-xs text-theme-muted">Take courses as a student</div>
+              </button>
+              <button
+                type="button"
+                className={`p-4 rounded-xl border-2 text-left transition-all ${form.role === 'mentor' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                style={{ background: form.role === 'mentor' ? 'rgba(139,92,246,0.06)' : 'var(--color-surface-2)' }}
+                onClick={() => setForm(f => ({ ...f, role: 'mentor' }))}
+              >
+                <Users size={20} className={form.role === 'mentor' ? 'text-primary' : 'text-theme-muted'} />
+                <div className="font-semibold text-sm mt-2 text-theme">Teach</div>
+                <div className="text-xs text-theme-muted">Create and sell courses</div>
+              </button>
+            </div>
           </div>
 
           <button id="register-submit" type="submit" className="btn btn-primary btn-full btn-lg mt-2" disabled={loading}>
@@ -70,7 +101,7 @@ export default function Register() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-theme-muted mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
         </p>

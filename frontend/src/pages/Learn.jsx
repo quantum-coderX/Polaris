@@ -121,7 +121,7 @@ export default function Learn() {
             <span className="sm:hidden">Back</span>
           </Link>
         </div>
-        <div className="learn-topbar-center hidden md:block text-sm font-semibold text-white truncate">
+        <div className="learn-topbar-center hidden md:block text-sm font-semibold text-theme truncate">
           {currentLesson?.title ?? 'Select a lesson'}
         </div>
         <div className="learn-topbar-right">
@@ -134,7 +134,7 @@ export default function Learn() {
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="text-xs text-gray-400 hidden sm:block">
+          <span className="text-xs text-theme-muted hidden sm:block">
             {currentIdx + 1} / {lessons.length}
           </span>
           <button
@@ -155,8 +155,8 @@ export default function Learn() {
         <aside className={`learn-sidebar ${sidebarOpen ? 'learn-sidebar--open' : 'learn-sidebar--closed'}`}>
           <div className="learn-sidebar-header">
             <BookOpen size={16} className="text-primary" />
-            <span className="text-sm font-bold text-white">Course Content</span>
-            <span className="ml-auto text-xs text-gray-400">
+            <span className="text-sm font-bold text-theme">Course Content</span>
+            <span className="ml-auto text-xs text-theme-muted">
               {completedIds.size}/{lessons.length}
             </span>
           </div>
@@ -173,7 +173,7 @@ export default function Learn() {
                   className="learn-module-btn"
                   onClick={() => toggleModule(idx)}
                 >
-                  <span className="text-sm font-semibold text-white truncate flex-1 text-left">
+                  <span className="text-sm font-semibold text-theme truncate flex-1 text-left">
                     {mod.title}
                   </span>
                   {expandedModules.has(idx) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -193,16 +193,16 @@ export default function Learn() {
                     >
                       <span className="learn-lesson-icon">
                         {locked ? (
-                          <Lock size={13} className="text-gray-500" />
+                          <Lock size={13} className="text-theme-sub" />
                         ) : done ? (
                           <CheckCircle size={13} className="text-secondary" />
                         ) : (
-                          <PlayCircle size={13} className={active ? 'text-primary' : 'text-gray-500'} />
+                          <PlayCircle size={13} className={active ? 'text-primary' : 'text-theme-sub'} />
                         )}
                       </span>
                       <span className="truncate text-xs text-left flex-1">{lesson.title}</span>
                       {lesson.duration_minutes > 0 && (
-                        <span className="text-[10px] text-gray-500 shrink-0">
+                        <span className="text-[10px] text-theme-sub shrink-0">
                           {lesson.duration_minutes}m
                         </span>
                       )}
@@ -289,7 +289,7 @@ function VideoPlayer({ lesson, streamUrl, onEnded }) {
     return (
       <div className="video-placeholder">
         <PlayCircle size={64} className="text-primary opacity-40" />
-        <p className="text-gray-400 mt-4">Select a lesson to start</p>
+        <p className="text-theme-muted mt-4">Select a lesson to start</p>
       </div>
     )
   }
@@ -299,8 +299,8 @@ function VideoPlayer({ lesson, streamUrl, onEnded }) {
       <div className="video-placeholder">
         <div className="text-center max-w-md">
           <BookOpen size={56} className="text-primary opacity-50 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-white mb-2">{lesson.title}</h3>
-          <p className="text-gray-400 text-sm">{lesson.description ?? 'Reading lesson — no video.'}</p>
+          <h3 className="text-lg font-bold text-theme mb-2">{lesson.title}</h3>
+          <p className="text-theme-muted text-sm">{lesson.description ?? 'Reading lesson — no video.'}</p>
         </div>
       </div>
     )
@@ -316,7 +316,7 @@ function VideoPlayer({ lesson, streamUrl, onEnded }) {
       {error && (
         <div className="video-placeholder">
           <p className="text-red-400 font-semibold">Could not load video.</p>
-          <p className="text-gray-500 text-sm mt-1">The stream URL may have expired.</p>
+          <p className="text-theme-sub text-sm mt-1">The stream URL may have expired.</p>
         </div>
       )}
       {streamUrl && !error && (
@@ -422,7 +422,7 @@ function QAPanel({ courseId, accessToken }) {
           </div>
         )}
         {!isLoading && messages.length === 0 && (
-          <div className="text-center py-10 text-gray-500">
+          <div className="text-center py-10 text-theme-sub">
             <MessageSquare size={36} className="mx-auto mb-3 opacity-40" />
             <p className="text-sm">No questions yet. Be the first!</p>
           </div>
@@ -540,8 +540,8 @@ function QuizPanel({ lessonId }) {
   if (!quizLoading && (quizError || !quiz)) {
     return (
       <div className="quiz-empty">
-        <HelpCircle size={48} className="text-gray-600 mb-3" />
-        <p className="text-gray-400 text-sm">No quiz available for this lesson.</p>
+        <HelpCircle size={48} className="text-theme-sub mb-3" />
+        <p className="text-theme-muted text-sm">No quiz available for this lesson.</p>
       </div>
     )
   }
@@ -577,7 +577,7 @@ function QuizPanel({ lessonId }) {
 
         {/* Per-question feedback */}
         <div className="quiz-feedback">
-          <h4 className="text-sm font-bold text-white mb-3">Question Review</h4>
+          <h4 className="text-sm font-bold text-theme mb-3">Question Review</h4>
           {result.feedback.map((fb, i) => (
             <div key={fb.question_id} className={`quiz-feedback-item ${fb.correct ? 'quiz-feedback-item--correct' : 'quiz-feedback-item--wrong'}`}>
               <div className="quiz-feedback-header">
@@ -586,12 +586,12 @@ function QuizPanel({ lessonId }) {
                   ? <CheckCircle size={14} className="text-secondary" />
                   : <XCircleIcon size={14} className="text-accent" />}
               </div>
-              <p className="text-sm text-gray-300 mb-1">{fb.question_text}</p>
+              <p className="text-sm text-theme-muted mb-1">{fb.question_text}</p>
               {!fb.correct && (
                 <p className="text-xs text-accent">Your answer: {fb.your_answer || '(blank)'} · Correct: {fb.correct_answer}</p>
               )}
               {fb.explanation && (
-                <p className="text-xs text-gray-500 mt-1 italic">{fb.explanation}</p>
+                <p className="text-xs text-theme-sub mt-1 italic">{fb.explanation}</p>
               )}
             </div>
           ))}
@@ -619,10 +619,10 @@ function QuizPanel({ lessonId }) {
     <div className="quiz-panel animate-fade-in">
       <div className="quiz-header">
         <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
+          <h3 className="text-base font-bold text-theme flex items-center gap-2">
             <Award size={16} className="text-primary" /> {quiz.title}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">Pass score: {quiz.pass_score}% · {totalQ} question{totalQ !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-theme-sub mt-0.5">Pass score: {quiz.pass_score}% · {totalQ} question{totalQ !== 1 ? 's' : ''}</p>
         </div>
         {attempts.length > 0 && (
           <button className="btn btn-ghost btn-sm" onClick={() => setShowAttempts((v) => !v)}>
@@ -646,7 +646,7 @@ function QuizPanel({ lessonId }) {
       </div>
 
       <div className="quiz-footer">
-        <span className="text-xs text-gray-500">{answeredCount}/{totalQ} answered</span>
+        <span className="text-xs text-theme-sub">{answeredCount}/{totalQ} answered</span>
         <button
           id="quiz-submit-btn"
           className="btn btn-primary"
@@ -736,7 +736,7 @@ function QuestionCard({ question, index, value, onChange }) {
 
 
 function AttemptsTable({ attempts, passScore }) {
-  if (!attempts.length) return <p className="text-xs text-gray-500 mt-3">No previous attempts.</p>
+  if (!attempts.length) return <p className="text-xs text-theme-sub mt-3">No previous attempts.</p>
   return (
     <div className="quiz-attempts">
       <table className="quiz-attempts-table">
@@ -758,7 +758,7 @@ function AttemptsTable({ attempts, passScore }) {
                   {a.passed ? 'Passed' : 'Failed'}
                 </span>
               </td>
-              <td className="text-gray-500">{new Date(a.submitted_at).toLocaleDateString()}</td>
+              <td className="text-theme-sub">{new Date(a.submitted_at).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
@@ -789,8 +789,8 @@ function NotesPanel({ courseId, lessonId }) {
     <div className="notes-panel">
       <div className="notes-header">
         <StickyNote size={16} className="text-primary" />
-        <span className="text-sm font-semibold text-white">Lesson Notes</span>
-        <span className="text-xs text-gray-500 ml-2">Saved locally in your browser</span>
+        <span className="text-sm font-semibold text-theme">Lesson Notes</span>
+        <span className="text-xs text-theme-sub ml-2">Saved locally in your browser</span>
       </div>
       <textarea
         id="notes-textarea"
@@ -809,7 +809,7 @@ function NotesPanel({ courseId, lessonId }) {
           {saved ? <CheckCircle size={14} className="text-secondary" /> : <StickyNote size={14} />}
           {saved ? 'Saved!' : 'Save Note'}
         </button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-theme-sub">
           {note.length} characters
         </span>
       </div>

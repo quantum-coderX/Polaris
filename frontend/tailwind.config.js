@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ['selector', '[data-theme="dark"]'],
   content: [
     "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -9,7 +10,7 @@ export default {
       fontFamily: {
         sans:    ['Inter', 'sans-serif'],
         heading: ['Inter', 'sans-serif'],
-        serif:   ['Inter', 'sans-serif'],
+        serif:   ['Playfair Display', 'Georgia', 'serif'],
         body:    ['Inter', 'sans-serif'],
       },
       colors: {
@@ -22,6 +23,11 @@ export default {
         secondary: 'var(--color-secondary)', // Luminous Emerald
         accent:    'var(--color-accent)',    // Danger/Error Red
         gold:      'var(--color-gold)',      // Warning/Alert Amber
+        theme: {
+          DEFAULT: 'var(--color-text)',
+          muted:   'var(--color-text-muted)',
+          sub:     'var(--color-text-sub)',
+        },
         // premium design system colors
         'metric-violet': '#8B5CF6',
         'metric-emerald': '#10B981',

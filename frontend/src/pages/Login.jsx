@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { BookOpen, Mail, Lock } from 'lucide-react'
 import api from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -36,7 +37,6 @@ export default function Login() {
     if (queryReason || stateReason) {
       navigate({ pathname: '/login', search: '' }, { replace: true, state: {} })
     }
-    // Show redirect alert once when landing on /login
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -59,13 +59,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6">
-      <div className="card w-full max-w-md animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="font-heading text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Welcome Back
-          </div>
-          <p className="text-gray-400 text-sm mt-2">Sign in to continue learning</p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-brand__logo">Polaris</div>
+          <div className="auth-brand__title">Welcome Back</div>
+          <p className="auth-brand__sub">Sign in to continue your learning journey</p>
         </div>
 
         {authAlert && (
@@ -74,7 +73,7 @@ export default function Login() {
             data-auth-alert-reason={authAlert.reason}
             className="mb-4 rounded-xl border px-4 py-3 text-sm"
             style={{
-              background: 'var(--color-surface-2)',
+              background: 'rgba(239,68,68,0.08)',
               borderColor: 'var(--color-accent)',
               color: 'var(--color-text)',
             }}
@@ -86,27 +85,33 @@ export default function Login() {
         <form id="login-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="form-group">
             <label className="form-label" htmlFor="login-email">Email</label>
-            <input
-              id="login-email"
-              type="email"
-              className="form-input"
-              placeholder="you@example.com"
-              required
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            />
+            <div className="relative">
+              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input
+                id="login-email"
+                type="email"
+                className="form-input pl-10"
+                placeholder="you@example.com"
+                required
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              />
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              type="password"
-              className="form-input"
-              placeholder="••••••••"
-              required
-              value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            />
+            <div className="relative">
+              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+              <input
+                id="login-password"
+                type="password"
+                className="form-input pl-10"
+                placeholder="••••••••"
+                required
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              />
+            </div>
           </div>
 
           <button id="login-submit" type="submit" className="btn btn-primary btn-full btn-lg mt-2" disabled={loading}>
@@ -114,10 +119,15 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-theme-muted mt-6">
           Don&apos;t have an account?{' '}
           <Link to="/register" className="text-primary font-semibold hover:underline">Sign up free</Link>
         </p>
+
+        <div className="mt-6 pt-6 border-t flex items-center justify-center gap-2 text-xs text-theme-muted" style={{ borderColor: 'var(--color-border)' }}>
+          <BookOpen size={14} />
+          <span>Access courses, track progress, earn certificates</span>
+        </div>
       </div>
     </div>
   )

@@ -1,26 +1,32 @@
 import axios from 'axios'
 import { useAuthStore, AUTH_STATUS } from '../store/authStore'
 
-// Base URLs for each service in production. If not set, falls back to local proxy `/api/v1`
+const defaultUrl = import.meta.env.VITE_API_URL || '';
 const SERVICE_URLS = {
-  auth: import.meta.env.VITE_AUTH_API_URL || '',
-  payment: import.meta.env.VITE_PAYMENT_API_URL || '',
-  notif: import.meta.env.VITE_NOTIF_API_URL || '',
-  core: import.meta.env.VITE_CORE_API_URL || import.meta.env.VITE_API_URL || ''
+  auth: import.meta.env.VITE_AUTH_API_URL || defaultUrl,
+  payment: import.meta.env.VITE_PAYMENT_API_URL || defaultUrl,
+  notif: import.meta.env.VITE_NOTIF_API_URL || defaultUrl,
+  core: import.meta.env.VITE_CORE_API_URL || defaultUrl
 }
 
 function getBaseUrlForPath(url = '') {
   const cleanUrl = url.replace(/^\//, '')
+  
+  const appendApiV1 = (baseUrl) => {
+    if (baseUrl.endsWith('/api/v1')) return baseUrl;
+    return baseUrl ? `${baseUrl}/api/v1` : '/api/v1';
+  }
+
   if (cleanUrl.startsWith('auth') || cleanUrl.startsWith('users')) {
-    return SERVICE_URLS.auth ? `${SERVICE_URLS.auth}/api/v1` : '/api/v1'
+    return appendApiV1(SERVICE_URLS.auth);
   }
   if (cleanUrl.startsWith('payments')) {
-    return SERVICE_URLS.payment ? `${SERVICE_URLS.payment}/api/v1` : '/api/v1'
+    return appendApiV1(SERVICE_URLS.payment);
   }
   if (cleanUrl.startsWith('notifications')) {
-    return SERVICE_URLS.notif ? `${SERVICE_URLS.notif}/api/v1` : '/api/v1'
+    return appendApiV1(SERVICE_URLS.notif);
   }
-  return SERVICE_URLS.core ? `${SERVICE_URLS.core}/api/v1` : '/api/v1'
+  return appendApiV1(SERVICE_URLS.core);
 }
 
 const api = axios.create({

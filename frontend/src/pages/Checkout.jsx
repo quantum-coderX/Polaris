@@ -86,12 +86,12 @@ export default function Checkout() {
                 <div className="checkout-course-meta">
                   <span className="badge badge-primary">{course?.level}</span>
                   {course?.total_lessons && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <span className="flex items-center gap-1 text-xs text-theme-muted">
                       <BookOpen size={12} /> {course.total_lessons} lessons
                     </span>
                   )}
                   {course?.total_duration_minutes && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <span className="flex items-center gap-1 text-xs text-theme-muted">
                       <Clock size={12} /> {Math.round(course.total_duration_minutes / 60)}h {course.total_duration_minutes % 60}m
                     </span>
                   )}
@@ -102,15 +102,15 @@ export default function Checkout() {
             {/* Price breakdown */}
             <div className="checkout-price-breakdown">
               <div className="checkout-price-row">
-                <span className="text-gray-400">Original price</span>
-                <span className={isFree ? 'line-through text-gray-600' : 'text-white font-semibold'}>
+                <span className="text-theme-muted">Original price</span>
+                <span className={isFree ? 'line-through text-theme-sub' : 'text-theme font-semibold'}>
                   {isFree ? 'Free' : `$${Number(course?.price).toFixed(2)}`}
                 </span>
               </div>
               <div className="checkout-price-divider" />
               <div className="checkout-price-row checkout-price-total">
-                <span className="font-bold text-white">Total</span>
-                <span className={`text-xl font-extrabold ${isFree ? 'text-secondary' : 'text-white'}`}>
+                <span className="font-bold text-theme">Total</span>
+                <span className={`text-xl font-extrabold ${isFree ? 'text-secondary' : 'text-theme'}`}>
                   {isFree ? 'FREE' : `$${Number(course?.price).toFixed(2)}`}
                 </span>
               </div>

@@ -24,6 +24,10 @@ services:
         value: Polaris API
       - key: DEBUG
         value: "false"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false   # JSON array e.g. ["https://your-frontend.vercel.app"]
       - key: SECRET_KEY
         sync: false   # Set this in Render dashboard
       - key: ADMIN_SECRET
@@ -71,6 +75,8 @@ services:
         value: Polaris Auth
       - key: DEBUG
         value: "false"
+      - key: CORS_ORIGINS
+        sync: false
       - key: SECRET_KEY
         sync: false
       - key: ADMIN_SECRET
@@ -112,6 +118,8 @@ services:
         value: Polaris Payment
       - key: DEBUG
         value: "false"
+      - key: CORS_ORIGINS
+        sync: false
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
@@ -145,6 +153,8 @@ services:
         value: Polaris Notif
       - key: DEBUG
         value: "false"
+      - key: CORS_ORIGINS
+        sync: false
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
