@@ -178,6 +178,15 @@ export const verifyCertificate = (certId) =>
 export const updateProfile = (data) =>
   api.patch('/users/me', data).then((r) => r.data)
 
+/** Upload a new avatar picture */
+export const uploadAvatar = (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post('/users/me/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data)
+}
+
 /** Get the current user's full profile */
 export const getMyProfile = () =>
   api.get('/auth/me').then((r) => r.data)

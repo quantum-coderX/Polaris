@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
-import api from '../services/api'
+import api, { uploadAvatar } from '../services/api'
 import toast from 'react-hot-toast'
 import {
   User, Mail, AtSign, FileText, ShieldCheck, ShieldOff,
@@ -16,7 +16,6 @@ export default function Profile() {
     full_name: user?.full_name ?? '',
     username: user?.username ?? '',
     bio: user?.bio ?? '',
-    avatar_url: user?.avatar_url ?? '',
   })
 
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
@@ -39,10 +38,25 @@ export default function Profile() {
     updateProfile.mutate(form)
   }
 
-  // ── Avatar URL preview ──────────────────────────────────────────────────
-  const handleAvatarChange = (url) => {
-    setForm(f => ({ ...f, avatar_url: url }))
-    setAvatarPreview(url)
+  // ── Avatar upload ─────────────────────────────────────────────────────────
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file) => uploadAvatar(file),
+    onSuccess: (data) => {
+      setUser?.(data)
+      qc.invalidateQueries(['me'])
+      setAvatarPreview(data.avatar_url)
+      toast.success('Profile picture updated!')
+    },
+    onError: (err) => toast.error(err?.response?.data?.detail || 'Failed to upload picture'),
+  })
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Show local preview immediately while uploading
+      setAvatarPreview(URL.createObjectURL(file))
+      uploadAvatarMutation.mutate(file)
+    }
   }
 
   // ── 2FA ─────────────────────────────────────────────────────────────────
@@ -95,29 +109,38 @@ export default function Profile() {
       <div className="card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt={user?.full_name}
-                className="w-24 h-24 rounded-2xl object-cover"
-                style={{ border: '2px solid var(--color-border)' }}
-                onError={() => setAvatarPreview(null)}
+          <div className="relative flex-shrink-0 group">
+            <label className="cursor-pointer block relative">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+                disabled={uploadAvatarMutation.isPending}
               />
-            ) : (
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt={user?.full_name}
+                  className={`w-24 h-24 rounded-2xl object-cover transition-opacity ${uploadAvatarMutation.isPending ? 'opacity-50' : 'group-hover:opacity-80'}`}
+                  style={{ border: '2px solid var(--color-border)' }}
+                  onError={() => setAvatarPreview(null)}
+                />
+              ) : (
+                <div
+                  className={`w-24 h-24 rounded-2xl flex items-center justify-center font-bold text-2xl text-white transition-opacity ${uploadAvatarMutation.isPending ? 'opacity-50' : 'group-hover:opacity-80'}`}
+                  style={{ background: 'var(--gradient-hero)' }}
+                >
+                  {initials}
+                </div>
+              )}
               <div
-                className="w-24 h-24 rounded-2xl flex items-center justify-center font-bold text-2xl text-white"
-                style={{ background: 'var(--gradient-hero)' }}
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm"
+                style={{ background: 'var(--color-primary)', color: '#fff' }}
               >
-                {initials}
+                <Upload size={14} />
               </div>
-            )}
-            <div
-              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'var(--color-primary)', color: '#fff' }}
-            >
-              <Upload size={14} />
-            </div>
+            </label>
           </div>
 
           {/* Identity info */}
@@ -201,21 +224,6 @@ export default function Profile() {
             />
           </div>
 
-          {/* Avatar URL */}
-          <div>
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
-              Avatar URL
-            </label>
-            <input
-              className="form-input w-full"
-              value={form.avatar_url}
-              onChange={e => handleAvatarChange(e.target.value)}
-              placeholder="https://example.com/your-photo.jpg"
-            />
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-              Enter a public image URL for your profile picture
-            </p>
-          </div>
 
           <div className="flex justify-end pt-2">
             <button
